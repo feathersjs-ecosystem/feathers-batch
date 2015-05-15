@@ -10,65 +10,44 @@ describe('feathers-batch tests', () => {
 
     app.use('/batch', batcher());
 
-    app.service('batch').create({}, {}, function (error) {
+    app.service('batch').create({call: []}, {}, function (error, data) {
       assert.ok(!error, 'No errors');
+      assert.deepEqual(data, {type: 'parallel', results: []});
       done();
     });
   });
 
-  it('simple batching with one service', (done) => {
+  it('simple batching in series with one service and one error', (done) => {
     let app = feathers();
 
     app.use('/todos', memory())
       .use('/batch', batcher());
 
-    app.listen(7667, () => {
+    let server = app.listen(7667);
+    server.on('listening', () => {
       app.service('batch').create({
-        'todos::create': [
-          [{'text': 'one todo', 'complete': false}],
-          [{'text': 'another todo', 'complete': true}]
-        ],
-        'todos::find': [{}]
+        type: 'series',
+        call: [
+          ['todos::create', {'text': 'one todo', 'complete': false}],
+          ['todos::create', {'text': 'another todo', 'complete': true}],
+          ['todos::get', 10],
+          ['todos::find', {}]
+        ]
       }, function (error, data) {
         assert.ok(!error);
-        assert.deepEqual(data, {
-          'todos::create': [
+        assert.deepEqual(data, [
+          [null, {"text": "one todo", "complete": false, "id": 0}],
+          [null, {"text": "another todo", "complete": true, "id": 1}],
+          [{"message": "Could not find record", "data": {"id": 10}}],
+          [
+            null,
             [
-              null,
-              {
-                'text': 'one todo',
-                'complete': false,
-                'id': 0
-              }
-            ],
-            [
-              null,
-              {
-                'text': 'another todo',
-                'complete': true,
-                'id': 1
-              }
-            ]
-          ],
-          'todos::find': [
-            [
-              null,
-              [
-                {
-                  'text': 'one todo',
-                  'complete': false,
-                  'id': 0
-                },
-                {
-                  'text': 'another todo',
-                  'complete': true,
-                  'id': 1
-                }
-              ]
+              {"text": "one todo", "complete": false, "id": 0},
+              {"text": "another todo", "complete": true, "id": 1}
             ]
           ]
-        });
-        done();
+        ]);
+        server.close(done);
       });
     });
   });

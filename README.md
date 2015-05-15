@@ -1,4 +1,4 @@
-# Feathers Batch
+# feathers-batch
 
 [![Build Status](https://travis-ci.org/feathersjs/feathers-batch.png?branch=master)](https://travis-ci.org/feathersjs/feathers-batch)
 
@@ -10,71 +10,101 @@ feathers-batch allows you to batch multiple calls to other service methods into 
 
 ## Usage
 
-Batching is implemented as a Feathers service that allows you to `create` new batch requests. Initialize the service in your app like:
+Batching is implemented as a Feathers service that allows to `create` new batch requests. Initialize the service in your app like:
 
 ```js
 var feathers = require('feathers');
+var bodyParser = require('body-parser');
 var batcher = require('feahters-batch');
 
 var app = feathers()
-  .use('/batch', batcher());
+  .use(bodyParser())
+  .use('/batch', batcher({
+    limit: 10
+  }));
 
 // ...
 ```
 
-And then send `create` batch requests in the following format:
+Options:
+
+- __limit__ - Indicates the maximum number of request allowed in a batch
+
+## Sending batch requests
+
+You can send a batch request as a `create` (`POST`) service call to `/batch` in the following format:
 
 ```js
 {
-  "service::method": [ /* array of params */ ],
-  // or for multiple calls to the same method
-  "service::method": [
-    [ /* call 1 array of params */ ],
-    [ /* call 2 array of params */ ]
+  "type": "<series/parallel>",
+  "call": [
+    [ "path1::method1", /* call 1 list of params */ ],
+    ...
+    [ "pathN::methodN", /* call N list of params */ ]
   ]
 }
 ```
 
-Which will return with the results like:
+`type` can be `parallel` to run all requests in parallel or `series` to run one after the other. If no type is given, `parallel` will be used.
 
+`path::method` calls work the same way as equivalent websocket calls. This means that the batch `create` params will be used as the base (which contains e.g. the authenticated user information so that a user can only create batch requests to services they are allowed to access) and call params will be set as `params.query` in the actual service call:
+
+```js
+// Finds all todos that are complete
+socket.emit('todos::find', { complete: true }, function(error, todos) {});
+
+// The equivalent batch call
+[ "todos::find", { "complete": true }]
+
+// Both will call the service like
+app.service('/todos', {
+  find: function(params, callback) {
+    // params == { query: { complete: true } }
+  }
+});
+```
+
+The batch call will return with the results like:
 
 ```js
 {
-  "service::method": [
-    [ error, result ]
-  ],
-  // or for multiple calls to the same method
-  "service::method": [
-    [ error1, result1 ],
-    [ error2, result2 ]
+  "type": "<series/parallel>",
+  "results": [
+    [ error, result ],
+    ...
+    [ errorN, resultN ]
   ]
 }
 ```
 
-The following example creates two Todos and then retrieves all Todos (with no parameters):
+## Example
+
+The following example creates two Todos in series and then retrieves all Todos (with no parameters):
 
 ```js
 {
-  "todos::create": [
-    [{ "text": "one todo", "complete": false }],
-    [{ "text": "another todo", "complete": true }]
-  ],
-  "todos::find": [{}]
+  "type": "series",
+  "call": [
+    [ "todos::create", { "text": "one todo", "complete": false } ],
+    [ "todos::create", { "text": "another todo", "complete": true } ]
+    [ "todos::find", {} ]
+  ]
 }
 ```
 
-And might return something like:
+Which might return something like:
 
 ```js
 {
-  "todos::create": [
-    [null, { "id": 1, "text": "one todo", "complete": false }],
-    [null, { "id": 2, "text": "another todo", "complete": true }]
-  ],
-  "todos::find": [ null, [
-      { "id": 0, "text": "todo that was already here", "complete": false },
-      { "id": 1, "text": "one todo", "complete": false },
-      { "id": 2, "text": "another todo", "complete": true }
+  "type": "series",
+  "results": [
+    [ null, { "id": 1, "text": "one todo", "complete": false }],
+    [ null, { "id": 2, "text": "another todo", "complete": true }],
+    [ null, [
+        { "id": 0, "text": "todo that was already here", "complete": false },
+        { "id": 1, "text": "one todo", "complete": false },
+        { "id": 2, "text": "another todo", "complete": true }
+      ]
     ]
   ]
 }

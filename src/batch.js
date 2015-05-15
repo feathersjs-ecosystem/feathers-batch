@@ -1,63 +1,72 @@
-//import commons from 'feathers-commons';
+import async from 'async';
+import commons from 'feathers-commons';
+
+const paramsPositions = {
+  find: 0,
+  update: 2,
+  patch: 2
+};
 
 function each(obj, cb) {
   Object.keys(obj).forEach(key => cb(obj[key], key));
 }
 
-// Wraps the arguments for a single call
-function wrapSingleCall(callData) {
-  if(callData.filter(Array.isArray).length !== callData.length) {
-    return [ callData ];
-  }
-
-  return callData;
-}
-
-function wrapAll(data) {
-  let result = {};
-  each(data, (value, key) => result[key] = wrapSingleCall(value));
-  return result;
-}
-
-function getTotal(data) {
-  let total = 0;
-  each(data, data => total += data.length);
-  return total;
+function extend(target, other) {
+  each(other, (val, prop) => target[prop] = val);
+  return target;
 }
 
 export default function() {
   return {
     create(data, params, callback) {
-      data = wrapAll(data);
+      let type = data.type || 'parallel';
 
-      let result = {};
-      let total = getTotal(data);
-      let processed = 0;
-
-      if(total === 0) {
-        // If there is nothing to do call back right away
-        return callback(null, result);
+      if(!Array.isArray(data.call) || !data.call.length) {
+        return callback(null, { type, results: [] });
       }
 
-      Object.keys(data).forEach(call => {
-        let [ path, method ] = call.split('::');
+      // async.series or async.parallel
+      let process = async[type];
+
+      if(!process) {
+        return callback(new Error(`Processing type "${data.type}" is not supported`));
+      }
+
+      let workers = data.call.map(call => {
+        let args = call.slice(0);
+        let [ path, method ] = args.shift().split('::');
         let service = this.app.service(path);
-        let callData = data[call];
-        let results = result[call] = [];
+        let position = typeof paramsPositions[method] !== 'undefined' ? paramsPositions[method] : 1;
 
-        callData.forEach((args, index) => {
-          // commons.getAguments(method, args)
-          service[method](...args, function() {
-            results[index] = Array.from(arguments);
-            processed++;
+        args = commons.getArguments(method, args);
 
-            if(total === processed) {
-              callback(null, result);
-            }
-          });
-        });
+        return function(callback) {
+          let handler = function() {
+            callback(null, Array.from(arguments));
+          };
+
+          if(!service) {
+            return handler(new Error(`Service ${path} does not exist`));
+          }
+
+          if(!method || typeof service[method] !== 'function') {
+            return handler(new Error(`Method ${method} on service ${path} does not exist`));
+          }
+
+          // getArguments always adds a dummy callback to the end.
+          // We want to use our own.
+          args[args.length - 1] = handler;
+
+          // Put the parameters into `query` and extend with original
+          // service parameters (logged in user etc) just like a Websocket call
+          args[position] = extend({ query: args[position] }, params);
+
+          // Call the service method
+          service[method](...args);
+        };
       });
 
+      process(workers, callback);
     },
 
     setup(app) {
