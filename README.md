@@ -69,7 +69,7 @@ The batch call will return with the results like:
 ```js
 {
   "type": "<series/parallel>",
-  "results": [
+  "data": [
     [ error, result ],
     ...
     [ errorN, resultN ]
@@ -97,7 +97,7 @@ Which might return something like:
 ```js
 {
   "type": "series",
-  "results": [
+  "data": [
     [ null, { "id": 1, "text": "one todo", "complete": false }],
     [ null, { "id": 2, "text": "another todo", "complete": true }],
     [ null, [

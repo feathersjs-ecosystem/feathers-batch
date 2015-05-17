@@ -11,8 +11,8 @@ function each(obj, cb) {
   Object.keys(obj).forEach(key => cb(obj[key], key));
 }
 
-function extend(target, other) {
-  each(other, (val, prop) => target[prop] = val);
+function extend(target, ...others) {
+  others.forEach(other => each(other, (val, prop) => target[prop] = val));
   return target;
 }
 
@@ -36,7 +36,8 @@ export default function() {
         let args = call.slice(0);
         let [ path, method ] = args.shift().split('::');
         let service = this.app.service(path);
-        let position = typeof paramsPositions[method] !== 'undefined' ? paramsPositions[method] : 1;
+        let position = typeof paramsPositions[method] !== 'undefined' ?
+          paramsPositions[method] : 1;
 
         args = commons.getArguments(method, args);
 
@@ -50,23 +51,23 @@ export default function() {
           }
 
           if(!method || typeof service[method] !== 'function') {
-            return handler(new Error(`Method ${method} on service ${path} does not exist`));
+            return handler(new Error(`Method ${method} on
+              service ${path} does not exist`));
           }
 
           // getArguments always adds a dummy callback to the end.
-          // We want to use our own.
           args[args.length - 1] = handler;
 
           // Put the parameters into `query` and extend with original
-          // service parameters (logged in user etc) just like a Websocket call
-          args[position] = extend({ query: args[position] }, params);
+          // service parameters (logged in user etc) just like a websocket call
+          args[position] = extend({}, params, { query: args[position] });
 
           // Call the service method
           service[method](...args);
         };
       });
 
-      process(workers, callback);
+      process(workers, (error, data) => callback(error, { type, data }));
     },
 
     setup(app) {
