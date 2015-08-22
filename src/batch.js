@@ -43,7 +43,7 @@ export default function() {
 
         return function(callback) {
           let handler = function() {
-            callback(null, Array.from(arguments));
+            callback(null, Array.prototype.slice.call(arguments));
           };
 
           if(!service) {
