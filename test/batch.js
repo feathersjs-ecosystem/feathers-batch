@@ -34,22 +34,28 @@ describe('feathers-batch tests', () => {
           ['todos::find', {}]
         ]
       }, function (error, data) {
-        assert.ok(!error);
-        assert.deepEqual(data, {
-          type: 'series',
-          data: [
-            [null, {"text": "one todo", "complete": false, "id": 0}],
-            [null, {"text": "another todo", "complete": true, "id": 1}],
-            [{"message": "Could not find record", "data": {"id": 10}}],
-            [
-              null,
+        try {
+          assert.ok(!error);
+          const notFound = data.data[2];
+          assert.deepEqual(data, {
+            type: 'series',
+            data: [
+              [null, {"text": "one todo", "complete": false, "id": 0}],
+              [null, {"text": "another todo", "complete": true, "id": 1}],
+              notFound,
               [
-                {"text": "one todo", "complete": false, "id": 0},
-                {"text": "another todo", "complete": true, "id": 1}
+                null,
+                [
+                  {"text": "one todo", "complete": false, "id": 0},
+                  {"text": "another todo", "complete": true, "id": 1}
+                ]
               ]
             ]
-          ]
-        });
+          });
+        } catch(e) {
+          return done(e);
+        }
+        
         server.close(done);
       });
     });
