@@ -51,6 +51,6 @@
     "feathers": "^2.0.0",
     "feathers-memory": "^0.7.3",
     "jshint": "^2.6.3",
-    "mocha": "^2.5.0"
+    "mocha": "^2.5.2"
   }
 }
