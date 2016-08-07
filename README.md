@@ -15,7 +15,7 @@ Batching is implemented as a Feathers service that allows to `create` new batch 
 ```js
 var feathers = require('feathers');
 var bodyParser = require('body-parser');
-var batcher = require('feahters-batch');
+var batcher = require('feathers-batch');
 
 var app = feathers()
   .use(bodyParser())
