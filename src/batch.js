@@ -7,28 +7,28 @@ const paramsPositions = {
   patch: 2
 };
 
-function each(obj, cb) {
+function each (obj, cb) {
   Object.keys(obj).forEach(key => cb(obj[key], key));
 }
 
-function extend(target, ...others) {
-  others.forEach(other => each(other, (val, prop) => target[prop] = val));
+function extend (target, ...others) {
+  others.forEach(other => each(other, (val, prop) => (target[prop] = val)));
   return target;
 }
 
-export default function() {
+export default function () {
   return {
-    create(data, params, callback) {
+    create (data, params, callback) {
       let type = data.type || 'parallel';
 
-      if(!Array.isArray(data.call) || !data.call.length) {
+      if (!Array.isArray(data.call) || !data.call.length) {
         return callback(null, { type, results: [] });
       }
 
       // async.series or async.parallel
       let process = async[type];
 
-      if(!process) {
+      if (!process) {
         return callback(new Error(`Processing type "${data.type}" is not supported`));
       }
 
@@ -36,21 +36,21 @@ export default function() {
         let args = call.slice(0);
         let [ path, method ] = args.shift().split('::');
         let service = this.app.service(path);
-        let position = typeof paramsPositions[method] !== 'undefined' ?
-          paramsPositions[method] : 1;
+        let position = typeof paramsPositions[method] !== 'undefined'
+          ? paramsPositions[method] : 1;
 
         args = commons.getArguments(method, args);
 
-        return function(callback) {
-          let handler = function() {
+        return function (callback) {
+          let handler = function () {
             callback(null, Array.prototype.slice.call(arguments));
           };
 
-          if(!service) {
+          if (!service) {
             return handler(new Error(`Service ${path} does not exist`));
           }
 
-          if(!method || typeof service[method] !== 'function') {
+          if (!method || typeof service[method] !== 'function') {
             return handler(new Error(`Method ${method} on
               service ${path} does not exist`));
           }
@@ -70,7 +70,7 @@ export default function() {
       process(workers, (error, data) => callback(error, { type, data }));
     },
 
-    setup(app) {
+    setup (app) {
       this.app = app;
     }
   };

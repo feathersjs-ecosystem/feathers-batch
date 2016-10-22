@@ -40,22 +40,22 @@ describe('feathers-batch tests', () => {
           assert.deepEqual(data, {
             type: 'series',
             data: [
-              [null, {"text": "one todo", "complete": false, "id": 0}],
-              [null, {"text": "another todo", "complete": true, "id": 1}],
+              [null, {'text': 'one todo', 'complete': false, 'id': 0}],
+              [null, {'text': 'another todo', 'complete': true, 'id': 1}],
               notFound,
               [
                 null,
                 [
-                  {"text": "one todo", "complete": false, "id": 0},
-                  {"text": "another todo", "complete": true, "id": 1}
+                  {'text': 'one todo', 'complete': false, 'id': 0},
+                  {'text': 'another todo', 'complete': true, 'id': 1}
                 ]
               ]
             ]
           });
-        } catch(e) {
+        } catch (e) {
           return done(e);
         }
-        
+
         server.close(done);
       });
     });
@@ -65,7 +65,7 @@ describe('feathers-batch tests', () => {
     let app = feathers();
 
     app.use('/todos', {
-      get(id, params, callback) {
+      get (id, params, callback) {
         callback(null, {id, params});
       }
     })
