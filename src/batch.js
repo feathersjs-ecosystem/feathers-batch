@@ -1,5 +1,7 @@
+import util from 'util';
 import async from 'async';
-import commons from 'feathers-commons';
+import commons from '@feathersjs/commons';
+
 
 const paramsPositions = {
   find: 0,
@@ -7,67 +9,70 @@ const paramsPositions = {
   patch: 2
 };
 
-function each (obj, cb) {
-  Object.keys(obj).forEach(key => cb(obj[key], key));
-}
-
-function extend (target, ...others) {
-  others.forEach(other => each(other, (val, prop) => (target[prop] = val)));
-  return target;
-}
 
 export default function () {
   return {
-    create (data, params, callback) {
-      let type = data.type || 'parallel';
+    async create (data, params) {
+      const type = data.type || 'parallel';
 
       if (!Array.isArray(data.call) || !data.call.length) {
-        return callback(null, { type, results: [] });
+        return { type, results: [] };
       }
 
       // async.series or async.parallel
-      let process = async[type];
+      const process = async[type];
 
       if (!process) {
-        return callback(new Error(`Processing type "${data.type}" is not supported`));
+        throw new Error(`Processing type "${data.type}" is not supported`);
       }
 
-      let workers = data.call.map(call => {
-        let args = call.slice(0);
-        let [ path, method ] = args.shift().split('::');
-        let service = this.app.service(path);
-        let position = typeof paramsPositions[method] !== 'undefined'
+      const workers = data.call.map(call => {
+        const args = call.slice(0);
+        const [ path, method ] = args.shift().split('::');
+        const service = this.app.service(path);
+        const position = typeof paramsPositions[method] !== 'undefined'
           ? paramsPositions[method] : 1;
-
-        args = commons.getArguments(method, args);
-
-        return function (callback) {
-          let handler = function () {
-            callback(null, Array.prototype.slice.call(arguments));
-          };
-
+        
+        const runner = async () => {
           if (!service) {
-            return handler(new Error(`Service ${path} does not exist`));
+            throw new Error(`Service ${path} does not exist`);
           }
 
           if (!method || typeof service[method] !== 'function') {
-            return handler(new Error(`Method ${method} on
-              service ${path} does not exist`));
+            throw new Error(
+              `Method ${method} on service ${path} does not exist`
+            );
           }
-
-          // getArguments always adds a dummy callback to the end.
-          args[args.length - 1] = handler;
 
           // Put the parameters into `query` and extend with original
           // service parameters (logged in user etc) just like a websocket call
-          args[position] = extend({}, params, { query: args[position] });
+          args[position] = Object.assign({}, params, { query: args[position] });
 
           // Call the service method
-          service[method](...args);
+          return await service[method](...args);
         };
+        return async.asyncify(async () => {
+          try {
+            return [null, await runner()];
+          }
+          catch(e) {
+            return [e];
+          }
+        });
       });
 
-      process(workers, (error, data) => callback(error, { type, data }));
+      return await new Promise((resolve, reject) => {
+        process(
+          workers,
+          (error, data) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ type, data });
+            }
+          }
+        )
+      });
     },
 
     setup (app) {
