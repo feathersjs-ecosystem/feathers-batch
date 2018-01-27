@@ -1,14 +1,10 @@
-import util from 'util';
 import async from 'async';
-import commons from '@feathersjs/commons';
-
 
 const paramsPositions = {
   find: 0,
   update: 2,
   patch: 2
 };
-
 
 export default function () {
   return {
@@ -32,7 +28,7 @@ export default function () {
         const service = this.app.service(path);
         const position = typeof paramsPositions[method] !== 'undefined'
           ? paramsPositions[method] : 1;
-        
+
         const runner = async () => {
           if (!service) {
             throw new Error(`Service ${path} does not exist`);
@@ -49,19 +45,18 @@ export default function () {
           args[position] = Object.assign({}, params, { query: args[position] });
 
           // Call the service method
-          return await service[method](...args);
+          return service[method](...args);
         };
         return async.asyncify(async () => {
           try {
             return [null, await runner()];
-          }
-          catch(e) {
+          } catch (e) {
             return [e];
           }
         });
       });
 
-      return await new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         process(
           workers,
           (error, data) => {
@@ -71,7 +66,7 @@ export default function () {
               resolve({ type, data });
             }
           }
-        )
+        );
       });
     },
 

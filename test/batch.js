@@ -3,12 +3,10 @@ import feathers from '@feathersjs/feathers';
 import express from '@feathersjs/express';
 import memory from 'feathers-memory';
 
-
 import batcher from '../src/batch';
 
-
 // Start a server for the 'app' and run the 'test' function.
-async function runWithServer(app, test) {
+async function runWithServer (app, test) {
   const server = app.listen(7667);
   const onListen = new Promise((resolve, reject) => {
     server.on('listening', resolve);
@@ -17,13 +15,11 @@ async function runWithServer(app, test) {
   await onListen.then(async () => {
     try {
       await test();
-    }
-    finally {
+    } finally {
       await new Promise((resolve, reject) => server.close(resolve));
     }
   });
 }
-
 
 describe('feathers-batch tests', () => {
   it('batching with no parameters comes back with empty object', async () => {
@@ -83,7 +79,7 @@ describe('feathers-batch tests', () => {
       }
     });
     app.use('/batch', batcher());
-    
+
     await runWithServer(
       app,
       async () => {
@@ -94,7 +90,7 @@ describe('feathers-batch tests', () => {
               ['todos::get', 3, {test: 'param2'}]
             ]
           },
-          {my: 'params'},
+          {my: 'params'}
         );
 
         assert.deepEqual(data, {
