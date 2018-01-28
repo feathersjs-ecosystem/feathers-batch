@@ -50,6 +50,7 @@
   "dependencies": {
     "@feathersjs/commons": "^1.4.0",
     "async": "^2.6.0",
+    "babel-polyfill": "^6.26.0",
     "debug": "^3.0.0"
   },
   "devDependencies": {
@@ -59,7 +60,6 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.7.4",
     "babel-plugin-add-module-exports": "^0.2.0",
-    "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "eslint-if-supported": "^1.0.1",
     "feathers-memory": "^2.1.0",
