@@ -1,3 +1,8 @@
+// babel-polyfill is required to avoid error:
+//     ReferenceError: regeneratorRuntime is not defined
+// It should be removed if no support for node js version below 7.6 is required.
+// https://github.com/babel/babel/issues/5085
+import 'babel-polyfill';
 import async from 'async';
 
 const paramsPositions = {
@@ -47,6 +52,9 @@ export default function () {
           // Call the service method
           return service[method](...args);
         };
+        // async.asyncify should be removed if no support
+        // for node js version below 7.6 is required,
+        // because 'async' library supports native AsyncFunction.
         return async.asyncify(async () => {
           try {
             return [null, await runner()];

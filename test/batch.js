@@ -1,3 +1,8 @@
+// babel-polyfill is required to avoid error:
+//     ReferenceError: regeneratorRuntime is not defined
+// It should be removed if no support for node js version below 7.6 is required.
+// https://github.com/babel/babel/issues/5085
+import 'babel-polyfill';
 import assert from 'assert';
 import feathers from '@feathersjs/feathers';
 import express from '@feathersjs/express';
@@ -6,7 +11,7 @@ import memory from 'feathers-memory';
 import batcher from '../src/batch';
 
 // Start a server for the 'app' and run the 'test' function.
-async function runWithServer (app, test) {
+const runWithServer = async function (app, test) {
   const server = app.listen(7667);
   const onListen = new Promise((resolve, reject) => {
     server.on('listening', resolve);
