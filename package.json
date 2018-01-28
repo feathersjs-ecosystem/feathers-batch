@@ -21,7 +21,7 @@
   "author": "David Luecke <daff@neyeon.com> (https://feathersjs.com)",
   "contributors": [],
   "engines": {
-    "node": ">= 4"
+    "node": ">= 6"
   },
   "main": "lib/batch.js",
   "scripts": {

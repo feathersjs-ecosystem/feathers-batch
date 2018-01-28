@@ -24,7 +24,7 @@ const runWithServer = async function (app, test) {
       await new Promise((resolve, reject) => server.close(resolve));
     }
   });
-}
+};
 
 describe('feathers-batch tests', () => {
   it('batching with no parameters comes back with empty object', async () => {
