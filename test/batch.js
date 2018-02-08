@@ -1,85 +1,103 @@
+// babel-polyfill is required to avoid error:
+//     ReferenceError: regeneratorRuntime is not defined
+// It should be removed if no support for node js version below 7.6 is required.
+// https://github.com/babel/babel/issues/5085
+import 'babel-polyfill';
 import assert from 'assert';
-import feathers from 'feathers';
+import feathers from '@feathersjs/feathers';
+import express from '@feathersjs/express';
 import memory from 'feathers-memory';
 
 import batcher from '../src/batch';
 
+// Start a server for the 'app' and run the 'test' function.
+const runWithServer = async function (app, test) {
+  const server = app.listen(7667);
+  const onListen = new Promise((resolve, reject) => {
+    server.on('listening', resolve);
+  });
+
+  await onListen.then(async () => {
+    try {
+      await test();
+    } finally {
+      await new Promise((resolve, reject) => server.close(resolve));
+    }
+  });
+};
+
 describe('feathers-batch tests', () => {
-  it('batching with no parameters comes back with empty object', done => {
-    let app = feathers();
+  it('batching with no parameters comes back with empty object', async () => {
+    const app = express(feathers());
 
     app.use('/batch', batcher());
 
-    app.service('batch').create({call: []}, {}, function (error, data) {
-      assert.ok(!error, 'No errors');
-      assert.deepEqual(data, {type: 'parallel', results: []});
-      done();
-    });
+    const data = await app.service('batch').create({call: []}, {});
+    assert.deepEqual(data, {type: 'parallel', results: []});
   });
 
-  it('simple batching in series with one service and one error', done => {
-    let app = feathers();
+  it('simple batching in series with one service and one error', async () => {
+    const app = express(feathers());
 
-    app.use('/todos', memory())
-      .use('/batch', batcher());
+    app.use('/todos', memory());
+    app.use('/batch', batcher());
 
-    let server = app.listen(7667);
-    server.on('listening', () => {
-      app.service('batch').create({
-        type: 'series',
-        call: [
-          ['todos::create', {'text': 'one todo', 'complete': false}],
-          ['todos::create', {'text': 'another todo', 'complete': true}],
-          ['todos::get', 10],
-          ['todos::find', {}]
-        ]
-      }, function (error, data) {
-        try {
-          assert.ok(!error);
-          const notFound = data.data[2];
-          assert.deepEqual(data, {
-            type: 'series',
-            data: [
-              [null, {'text': 'one todo', 'complete': false, 'id': 0}],
-              [null, {'text': 'another todo', 'complete': true, 'id': 1}],
-              notFound,
+    await runWithServer(
+      app,
+      async () => {
+        const data = await app.service('batch').create({
+          type: 'series',
+          call: [
+            ['todos::create', {'text': 'one todo', 'complete': false}],
+            ['todos::create', {'text': 'another todo', 'complete': true}],
+            ['todos::get', 10],
+            ['todos::find', {}]
+          ]
+        });
+
+        const notFound = data.data[2];
+        assert.deepEqual(data, {
+          type: 'series',
+          data: [
+            [null, {'text': 'one todo', 'complete': false, 'id': 0}],
+            [null, {'text': 'another todo', 'complete': true, 'id': 1}],
+            notFound,
+            [
+              null,
               [
-                null,
-                [
-                  {'text': 'one todo', 'complete': false, 'id': 0},
-                  {'text': 'another todo', 'complete': true, 'id': 1}
-                ]
+                {'text': 'one todo', 'complete': false, 'id': 0},
+                {'text': 'another todo', 'complete': true, 'id': 1}
               ]
             ]
-          });
-        } catch (e) {
-          return done(e);
-        }
-
-        server.close(done);
-      });
-    });
+          ]
+        });
+      }
+    );
   });
 
-  it('extends service params to batch calls and sets query', done => {
-    let app = feathers();
+  it('extends service params to batch calls and sets query', async () => {
+    const app = express(feathers());
 
     app.use('/todos', {
-      get (id, params, callback) {
-        callback(null, {id, params});
+      get (id, params) {
+        return Promise.resolve({id, params});
       }
-    })
-      .use('/batch', batcher());
+    });
+    app.use('/batch', batcher());
 
-    let server = app.listen(7667);
-    server.on('listening', () => {
-      app.service('batch').create({
-        call: [
-          ['todos::get', 1, {test: 'param1'}],
-          ['todos::get', 3, {test: 'param2'}]
-        ]
-      }, {my: 'params'}, function (error, data) {
-        assert.ok(!error);
+    await runWithServer(
+      app,
+      async () => {
+        const data = await app.service('batch').create(
+          {
+            call: [
+              ['todos::get', 1, {test: 'param1'}],
+              ['todos::get', 3, {test: 'param2'}]
+            ]
+          },
+          {my: 'params'}
+        );
+
         assert.deepEqual(data, {
           type: 'parallel',
           data: [
@@ -87,8 +105,7 @@ describe('feathers-batch tests', () => {
             [null, {id: 3, params: {my: 'params', query: {test: 'param2'}}}]
           ]
         });
-        server.close(done);
-      });
-    });
+      }
+    );
   });
 });
