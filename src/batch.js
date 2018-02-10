@@ -16,8 +16,12 @@ export default function () {
     async create (data, params) {
       const type = data.type || 'parallel';
 
-      if (!Array.isArray(data.call) || !data.call.length) {
+      if (Array.isArray(data.call) && !data.call.length) {
         return { type, results: [] };
+      }
+
+      if (!(data.call instanceof Object)) {
+        throw new Error('Malformed "call" value, it must be an Array or an Object.');
       }
 
       // async.series or async.parallel
@@ -27,8 +31,16 @@ export default function () {
         throw new Error(`Processing type "${data.type}" is not supported`);
       }
 
-      const workers = data.call.map(call => {
+      let returnAs = data.return;
+      if (!Array.isArray(data.call)) {
+        returnAs = returnAs || 'object';
+        data.call = Object.entries(data.call).map(pair => [pair[0]].concat(pair[1]))
+      }
+      returnAs = returnAs || 'array';
+
+      const makeWorker = (call) => {
         const args = call.slice(0);
+        const name = (returnAs === 'object') ? args.shift() : 'noname';
         const [ path, method ] = args.shift().split('::');
         const service = this.app.service(path);
         const position = typeof paramsPositions[method] !== 'undefined'
@@ -57,21 +69,27 @@ export default function () {
         // because 'async' library supports native AsyncFunction.
         return async.asyncify(async () => {
           try {
-            return [null, await runner()];
+            return [name, null, await runner()];
           } catch (e) {
-            return [e];
+            return [name, e];
           }
         });
-      });
+      }
+
+      const workers = data.call.map(makeWorker);
 
       return new Promise((resolve, reject) => {
         process(
           workers,
-          (error, data) => {
+          (error, list) => {
             if (error) {
               reject(error);
             } else {
-              resolve({ type, data });
+              const named = list.reduce((p, v) => (p[v.shift()] = v, p), {});
+              resolve({
+                type,
+                data: (returnAs === 'object') ? named : list
+              });
             }
           }
         );

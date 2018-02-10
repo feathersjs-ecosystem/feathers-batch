@@ -44,17 +44,20 @@ You can send a batch request as a `create` (`POST`) service call to `/batch` in 
 ```js
 {
   "type": "<series/parallel>",
+  "return": "<array/object>",
   "call": [
-    [ "path1::method1", /* call 1 list of params */ ],
+    [ "resultField1", "path1::method1", /* call 1 list of params */ ],
     ...
-    [ "pathN::methodN", /* call N list of params */ ]
+    [ "resultFieldN", "pathN::methodN", /* call N list of params */ ]
   ]
 }
 ```
 
 `type` can be `parallel` to run all requests in parallel or `series` to run one after the other. If no type is given, `parallel` will be used.
 
-`path::method` calls work the same way as equivalent websocket calls. This means that the batch `create` params will be used as the base (which contains e.g. the authenticated user information so that a user can only create batch requests to services they are allowed to access) and call params will be set as `params.query` in the actual service call:
+`return` can be `array` to return result as an array or `object` to return result as an object. If no return is given, `array` will be used.
+
+`call` items work the same way as equivalent websocket calls to `path::method`. `resultField` must be specified only if `return` is `object`. Batch `create` params will be used as the base (which contains e.g. the authenticated user information so that a user can only create batch requests to services they are allowed to access) and call params will be set as `params.query` in the actual service call:
 
 ```js
 // Finds all todos that are complete
@@ -71,7 +74,7 @@ app.service('/todos', {
 });
 ```
 
-The batch call will return with the results like:
+If `return` is `array` or not specified then the batch call will return with the results like:
 
 ```js
 {
@@ -83,6 +86,20 @@ The batch call will return with the results like:
   ]
 }
 ```
+
+If `return` is `object` then the batch call will return with the results like:
+
+```js
+{
+  "type": "<series/parallel>",
+  "data": {
+    resultField1: [ error, result ],
+    ...
+    resultFieldN: [ errorN, resultN ]
+  }
+}
+```
+
 
 ## Example
 
@@ -116,6 +133,71 @@ Which might return something like:
   ]
 }
 ```
+
+The same call which will return result as an object:
+
+```js
+{
+  "type": "series",
+  "return": "object",
+  "call": [
+    [ "oneTodo", "todos::create", { "text": "one todo", "complete": false } ],
+    [ "anotherTodo", "todos::create", { "text": "another todo", "complete": true } ]
+    [ "allTodos", "todos::find", {} ]
+  ]
+}
+```
+
+Will return something like this:
+
+```js
+{
+  "type": "series",
+  "data": {
+    oneTodo: [ null, { "id": 1, "text": "one todo", "complete": false }],
+    anotherTodo: [ null, { "id": 2, "text": "another todo", "complete": true }],
+    allTodos: [ null, [
+        { "id": 0, "text": "todo that was already here", "complete": false },
+        { "id": 1, "text": "one todo", "complete": false },
+        { "id": 2, "text": "another todo", "complete": true }
+      ]
+    ]
+  }
+}
+```
+
+### A simple form of a parallel call which returns object
+
+Same request with parallel calls can be produced like this:
+
+```js
+{
+  "call": {
+    "oneTodo": ["todos::create", { "text": "one todo", "complete": false } ],
+    "anotherTodo": ["todos::create", { "text": "another todo", "complete": true } ]
+    "allTodos": ["todos::find", {} ]
+  }
+}
+```
+
+Will return something like this:
+
+```js
+{
+  "type": "parallel",
+  "data": {
+    oneTodo: [ null, { "id": 2, "text": "one todo", "complete": false }],
+    anotherTodo: [ null, { "id": 1, "text": "another todo", "complete": true }],
+    allTodos: [ null, [
+        { "id": 0, "text": "todo that was already here", "complete": false },
+        { "id": 1, "text": "one todo", "complete": false },
+        { "id": 2, "text": "another todo", "complete": true }
+      ]
+    ]
+  }
+}
+```
+
 
 ## Changelog
 
