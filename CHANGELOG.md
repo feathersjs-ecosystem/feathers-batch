@@ -1,5 +1,16 @@
 # Change Log
 
+## [v0.2.1](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v0.2.1) (2018-02-27)
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v0.2.0...v0.2.1)
+
+**Closed issues:**
+
+- How to use patch? [\#33](https://github.com/feathersjs-ecosystem/feathers-batch/issues/33)
+
+**Merged pull requests:**
+
+- Fix repository location [\#42](https://github.com/feathersjs-ecosystem/feathers-batch/pull/42) ([daffl](https://github.com/daffl))
+
 ## [v0.2.0](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v0.2.0) (2018-02-27)
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v0.1.1...v0.2.0)
 
