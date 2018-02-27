@@ -51,7 +51,7 @@
   "dependencies": {
     "@feathersjs/commons": "^1.4.0",
     "async": "^2.6.0",
-    "debug": "^3.0.0"
+    "debug": "^3.1.0"
   },
   "devDependencies": {
     "@feathersjs/configuration": "^1.0.2",
