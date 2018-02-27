@@ -26,12 +26,13 @@
   "main": "lib/batch.js",
   "scripts": {
     "prepublish": "npm run compile",
-    "publish": "git push origin --tags",
+    "publish": "git push origin --tags && npm run changelog && git push origin",
+    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
     "compile": "rimraf lib/ && node_modules/.bin/babel -d lib/ src/",
-    "lint": "eslint-if-supported semistandard --fix",
+    "lint": "semistandard --fix",
     "mocha": "mocha --opts mocha.opts",
     "test": "npm run lint && npm run coverage",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --opts mocha.opts"
@@ -50,7 +51,6 @@
   "dependencies": {
     "@feathersjs/commons": "^1.4.0",
     "async": "^2.6.0",
-    "babel-polyfill": "^6.26.0",
     "debug": "^3.0.0"
   },
   "devDependencies": {
@@ -61,7 +61,6 @@
     "babel-core": "^6.7.4",
     "babel-plugin-add-module-exports": "^0.2.0",
     "babel-preset-env": "^1.6.1",
-    "eslint-if-supported": "^1.0.1",
     "feathers-memory": "^2.1.0",
     "istanbul": "^1.1.0-alpha.1",
     "mocha": "^5.0.0",
