@@ -1,11 +1,8 @@
 # feathers-batch
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs/feathers-batch.svg)](https://greenkeeper.io/)
-
-[![Build Status](https://travis-ci.org/feathersjs/feathers-batch.png?branch=master)](https://travis-ci.org/feathersjs/feathers-batch)
-[![Code Climate](https://codeclimate.com/github/feathersjs/feathers-batch.png)](https://codeclimate.com/github/feathersjs/feathers-batch)
-[![Test Coverage](https://codeclimate.com/github/feathersjs/feathers-batch/badges/coverage.svg)](https://codeclimate.com/github/feathersjs/feathers-batch/coverage)
-[![Dependency Status](https://img.shields.io/david/feathersjs/feathers-batch.svg?style=flat-square)](https://david-dm.org/feathersjs/feathers-batch)
+[![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs-ecosystem/feathers-batch.svg)](https://greenkeeper.io/)
+[![Build Status](https://travis-ci.org/feathersjs-ecosystem/feathers-batch.png?branch=master)](https://travis-ci.org/feathersjs-ecosystem/feathers-batch)
+[![Dependency Status](https://img.shields.io/david/feathersjs-ecosystem/feathers-batch.svg?style=flat-square)](https://david-dm.org/feathersjs-ecosystem/feathers-batch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-batch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-batch)
 [![Slack Status](http://slack.feathersjs.com/badge.svg)](http://slack.feathersjs.com)
 
@@ -199,18 +196,8 @@ Will return something like this:
 ```
 
 
-## Changelog
-
-__0.1.0__
-
-- Initial release
-
-## Author
-
-- [David Luecke](https://github.com/daffl)
-
 ## License
 
-Copyright (c) 2015 David Luecke
+Copyright (c) 2018 Feathers contributors
 
 Licensed under the [MIT license](LICENSE).

@@ -1,8 +1,3 @@
-// babel-polyfill is required to avoid error:
-//     ReferenceError: regeneratorRuntime is not defined
-// It should be removed if no support for node js version below 7.6 is required.
-// https://github.com/babel/babel/issues/5085
-import 'babel-polyfill';
 import assert from 'assert';
 import feathers from '@feathersjs/feathers';
 import express from '@feathersjs/express';
