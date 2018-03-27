@@ -4,12 +4,14 @@
 // https://github.com/babel/babel/issues/5085
 import 'babel-polyfill';
 import async from 'async';
+import errors from '@feathersjs/errors'
 
 const paramsPositions = {
   find: 0,
   update: 2,
   patch: 2
 };
+
 
 export default function () {
   return {
@@ -48,11 +50,11 @@ export default function () {
 
         const runner = async () => {
           if (!service) {
-            throw new Error(`Service ${path} does not exist`);
+            throw new errors.NotFound(`Service ${path} does not exist`);
           }
 
           if (!method || typeof service[method] !== 'function') {
-            throw new Error(
+            throw new errors.MethodNotAllowed(
               `Method ${method} on service ${path} does not exist`
             );
           }
