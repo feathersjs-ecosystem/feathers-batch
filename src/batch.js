@@ -19,7 +19,7 @@ export default function () {
       const type = data.type || 'parallel';
 
       if (Array.isArray(data.call) && !data.call.length) {
-        return { type, results: [] };
+        return { type, data: [] };
       }
 
       if (!(data.call instanceof Object)) {

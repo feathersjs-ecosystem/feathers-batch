@@ -28,7 +28,7 @@ describe('feathers-batch tests', () => {
     app.use('/batch', batcher());
 
     const data = await app.service('batch').create({call: []}, {});
-    assert.deepEqual(data, {type: 'parallel', results: []});
+    assert.deepEqual(data, {type: 'parallel', data: []});
   });
 
   it('simple batching in series with one service and one error', async () => {
