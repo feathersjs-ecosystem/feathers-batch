@@ -49,12 +49,10 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@feathersjs/commons": "^1.4.0",
     "async": "^2.6.0",
     "debug": "^3.1.0"
   },
   "devDependencies": {
-    "@feathersjs/configuration": "^1.0.2",
     "@feathersjs/express": "^1.1.2",
     "@feathersjs/feathers": "^3.1.0",
     "babel-cli": "^6.6.5",
