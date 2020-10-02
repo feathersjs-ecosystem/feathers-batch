@@ -1,6 +1,5 @@
 # feathers-batch
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs-ecosystem/feathers-batch.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/feathersjs-ecosystem/feathers-batch.png?branch=master)](https://travis-ci.org/feathersjs-ecosystem/feathers-batch)
 [![Dependency Status](https://img.shields.io/david/feathersjs-ecosystem/feathers-batch.svg?style=flat-square)](https://david-dm.org/feathersjs-ecosystem/feathers-batch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-batch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-batch)
@@ -116,6 +115,6 @@ Which might return something like:
 
 ## License
 
-Copyright (c) 2018 Feathers contributors
+Copyright (c) 2020 Feathers contributors
 
 Licensed under the [MIT license](LICENSE).

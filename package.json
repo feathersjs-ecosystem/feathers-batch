@@ -21,50 +21,40 @@
   "author": "David Luecke <daff@neyeon.com> (https://feathersjs.com)",
   "contributors": [],
   "engines": {
-    "node": ">= 6"
+    "node": ">= 12"
   },
-  "main": "lib/batch.js",
+  "main": "lib/",
   "scripts": {
-    "prepublish": "npm run compile",
     "publish": "git push origin --tags && npm run changelog && git push origin",
-    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
+    "changelog": "github_changelog_generator -u feathersjs-ecosystem -p feathers-batch",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
-    "compile": "rimraf lib/ && node_modules/.bin/babel -d lib/ src/",
     "lint": "semistandard --fix",
-    "mocha": "mocha --opts mocha.opts",
+    "mocha": "mocha --recursive test/",
     "test": "npm run lint && npm run coverage",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --opts mocha.opts"
+    "coverage": "nyc npm run mocha"
   },
   "semistandard": {
     "env": [
       "mocha"
-    ],
-    "ignore": [
-      "/lib"
     ]
   },
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {
-    "@feathersjs/commons": "^1.4.0",
-    "async": "^2.6.0",
-    "debug": "^3.1.0"
-  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "lib/**",
+    "*.d.ts",
+    "*.js"
+  ],
+  "dependencies": {},
   "devDependencies": {
-    "@feathersjs/configuration": "^1.0.2",
-    "@feathersjs/express": "^1.1.2",
-    "@feathersjs/feathers": "^3.1.0",
-    "babel-cli": "^6.6.5",
-    "babel-core": "^6.7.4",
-    "babel-plugin-add-module-exports": "^0.2.0",
-    "babel-preset-env": "^1.6.1",
-    "feathers-memory": "^2.1.0",
-    "istanbul": "^1.1.0-alpha.1",
-    "mocha": "^5.0.0",
-    "rimraf": "^2.5.4",
-    "semistandard": "^12.0.0"
+    "mocha": "^8.1.3",
+    "nyc": "^15.1.0",
+    "semistandard": "^14.2.3"
   }
 }
