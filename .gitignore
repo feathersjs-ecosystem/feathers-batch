@@ -26,6 +26,3 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
-
-# Won't be ignored during NPM publish
-lib/
