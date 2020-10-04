@@ -14,7 +14,7 @@ class BatchManager {
     if (this.timeout === null) {
       this.timeout = setTimeout(() =>
         this.flush()
-      , this.options.timeout || 0);
+      , this.options.timeout || 50);
     }
   }
 
