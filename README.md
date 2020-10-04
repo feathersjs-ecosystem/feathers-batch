@@ -1,5 +1,6 @@
 <h1>feathers-batch</h1>
 
+[![CI](https://github.com/feathersjs-ecosystem/feathers-batch/workflows/CI/badge.svg)](https://github.com/feathersjs-ecosystem/feathers-batch/actions?query=workflow%3ACI)
 [![Dependency Status](https://img.shields.io/david/feathersjs-ecosystem/feathers-batch.svg?style=flat-square)](https://david-dm.org/feathersjs-ecosystem/feathers-batch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-batch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-batch)
 [![Slack Status](http://slack.feathersjs.com/badge.svg)](http://slack.feathersjs.com)
