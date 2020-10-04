@@ -1,6 +1,5 @@
 # feathers-batch
 
-[![Build Status](https://travis-ci.org/feathersjs-ecosystem/feathers-batch.png?branch=master)](https://travis-ci.org/feathersjs-ecosystem/feathers-batch)
 [![Dependency Status](https://img.shields.io/david/feathersjs-ecosystem/feathers-batch.svg?style=flat-square)](https://david-dm.org/feathersjs-ecosystem/feathers-batch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-batch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-batch)
 [![Slack Status](http://slack.feathersjs.com/badge.svg)](http://slack.feathersjs.com)
@@ -9,9 +8,54 @@
 
 ## About
 
-feathers-batch allows you to batch multiple calls to other service methods into one. This is very useful for minimizing HTTP requests through the REST API but also works with websockets (or any other supported provider).
+`feathers-batch` allows to batch multiple calls to other service methods into one. This is very useful for minimizing client side requests to any Feathers API and can additionally speed up batched requests by only [performing authentication once](#authentication).
 
-## Usage
+It also comes with a client side module that automatically collects API requests from a [Feathers client]() into a batch.
+
+`feathers-batch` consists of two parts:
+
+- The server side [batch service](#service) to execute batch calls
+- The client side [batch client](#client) to collect parallel requests from a [Feathers client]() into a batch service request
+
+## Service
+
+### Usage
+
+### Batch calls
+
+### Authentication
+
+If you are batching authenticated requests, it is possible to perform the authentication step only once (instead of for every service call) by adding the [authenticate hook]() to the batch service `create` method:
+
+## Client
+
+`feathers-batch` also exports a client side module that automatically collects multiple requests that are made at the same time into a single batch call.
+
+### Parallel requests
+
+At the same time means e.g. multiple components making requests to the API in parallel. The following example will __NOT__ be collected into a batch:
+
+```js
+const user = await client.service('users').get(userId);
+const messages = await client.service('messages').find({
+  query: { userId }
+});
+```
+
+If you want to combine those requests, [Promise.all]() needs to be used:
+
+```js
+const [user, messages] = await Promise.all([
+  client.service('users').get(userId),
+  client.service('messages').find({
+    query: { userId }
+  })
+]);
+```
+
+### Options
+
+without having to change anything in your application.
 
 Batching is implemented as a Feathers service that allows to `create` new batch requests. Initialize the service in your app like:
 

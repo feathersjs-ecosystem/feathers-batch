@@ -31,10 +31,11 @@
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
     "lint": "semistandard --fix",
-    "mocha": "mocha --recursive test/",
-    "test": "npm run lint && npm run coverage",
-    "coverage": "nyc npm run mocha"
+    "mocha": "mocha --exit --recursive test/",
+    "coverage": "nyc npm run mocha",
+    "test": "npm run lint && npm run coverage"
   },
+  "browser": "./client/index.js",
   "semistandard": {
     "env": [
       "mocha"
@@ -48,11 +49,20 @@
     "LICENSE",
     "README.md",
     "lib/**",
+    "client/**",
     "*.d.ts",
     "*.js"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@feathersjs/errors": "^4.5.8"
+  },
   "devDependencies": {
+    "@feathersjs/express": "^4.5.8",
+    "@feathersjs/feathers": "^4.5.8",
+    "@feathersjs/rest-client": "^4.5.8",
+    "@feathersjs/socketio": "^4.5.8",
+    "axios": "^0.20.0",
+    "feathers-memory": "^4.1.0",
     "mocha": "^8.1.3",
     "nyc": "^15.1.0",
     "semistandard": "^14.2.3"
