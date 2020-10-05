@@ -10,18 +10,67 @@
 
 `feathers-batch` allows to batch multiple calls to other service methods into one. This is very useful for minimizing client side requests to any Feathers API and can additionally speed up batched requests by only [performing authentication once](#authentication).
 
-It also comes with a client side module that automatically collects API requests from a [Feathers client]() into a batch.
+It also comes with a client side module that automatically collects API requests from a [Feathers client]() into batches.
 
 `feathers-batch` consists of two parts:
 
-- The server side [batch service](#service) to execute batch calls
+- The server side [batch service](#service) to execute batched calls in parallel.
 - The client side [batch client](#client) to collect parallel requests from a [Feathers client]() into a batch service request
 
 ## Service
 
+On the server, batching is handled by a standalone service adapter.  As with the database adapters, you can setup the service on a path of your choosing.  The service watching for incoming batched requests and proxies calls to the correct service.
+
 ### Usage
 
+To setup the service, import the `BatchService` and pass it to `app.use`, as shown below.  Due to its simplicity, the `BatchService` only requires the `app` object as its first argument.  It does not accept any options.
+
+```js
+const feathers = require('@feathersjs/feathers');
+const express = require('@feathersjs/express');
+const socketio = require('@feathersjs/socketio');
+const memory = require('feathers-memory');
+
+const { BatchService } = require('feathers-batch');
+
+const app = express(feathers());
+
+app.configure(socketio());
+app.configure(express.rest());
+app.use(express.json());
+app.use('/people', memory());
+
+app.use('/batch', new BatchService(app));
+
+exports.app = app;
+```
+
+The `/batch` service is now ready to handle batched calls.
+
 ### Batch calls
+
+The `BatchService` only utilizes the `create` service method, which accepts a single `data` object as its only argument.  This object requires a `calls` array property, as shown below.
+
+```js
+app.service('batch').create({
+  calls: [
+    ['find', 'users', { query: {} }],
+    ['get', 'users', 45, {}],
+    ['create', 'todos', { name: 'Do the dishes' }, {}],
+    ['remove', 'pages', 1, {}]
+    ['update', 'todos', 3, { name: 'Pass test', isComplete: true }, {}],
+    ['patch', 'users', 4, { name: 'Falcon Fury' }, {}],
+  ]
+});
+```
+
+Each item in the `calls` array is an array containing
+
+1. the service method
+2. the service name
+3. the arguments for the service method
+
+You can review the service method arguments in the [FeathersJS Service Docs](https://docs.feathersjs.com/api/services.html#service-methods).
 
 ### Authentication
 
