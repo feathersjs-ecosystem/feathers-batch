@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.0.1](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v1.0.1) (2020-10-07)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v1.0.0...v1.0.1)
+
+**Merged pull requests:**
+
+- Bump @types/node from 14.11.2 to 14.11.5 [\#59](https://github.com/feathersjs-ecosystem/feathers-batch/pull/59) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
 ## [v1.0.0](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v1.0.0) (2020-10-04)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v0.2.1...v1.0.0)
@@ -22,7 +30,6 @@
 
 **Merged pull requests:**
 
-- Update @feathersjs/configuration to the latest version 🚀 [\#45](https://github.com/feathersjs-ecosystem/feathers-batch/pull/45) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
 - Fix repository location [\#42](https://github.com/feathersjs-ecosystem/feathers-batch/pull/42) ([daffl](https://github.com/daffl))
 
 ## [v0.2.0](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v0.2.0) (2018-02-27)
@@ -39,7 +46,6 @@
 
 - Prepare for release [\#41](https://github.com/feathersjs-ecosystem/feathers-batch/pull/41) ([daffl](https://github.com/daffl))
 - Feathers 3 support [\#39](https://github.com/feathersjs-ecosystem/feathers-batch/pull/39) ([NikitaVlaznev](https://github.com/NikitaVlaznev))
-- Update mocha to the latest version 🚀 [\#37](https://github.com/feathersjs-ecosystem/feathers-batch/pull/37) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
 - Update semistandard to the latest version 🚀 [\#35](https://github.com/feathersjs-ecosystem/feathers-batch/pull/35) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
 - Update mocha to the latest version 🚀 [\#32](https://github.com/feathersjs-ecosystem/feathers-batch/pull/32) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
 - Update debug to the latest version 🚀 [\#30](https://github.com/feathersjs-ecosystem/feathers-batch/pull/30) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
