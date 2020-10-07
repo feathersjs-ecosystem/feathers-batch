@@ -1,7 +1,7 @@
 {
   "name": "feathers-batch",
   "description": "Batch multiple Feathers service calls into one",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/feathersjs-ecosystem/feathers-batch.git"
