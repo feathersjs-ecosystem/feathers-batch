@@ -52,6 +52,7 @@
     "README.md",
     "lib/**",
     "client/**",
+    "types/**",
     "*.d.ts",
     "*.js"
   ],
