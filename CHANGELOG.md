@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v1.0.1...v1.1.0) (2021-01-02)
+
+
+### Features
+
+* **release:** Set up semantic release ([#87](https://github.com/feathersjs-ecosystem/feathers-batch/issues/87)) ([1cdf7a2](https://github.com/feathersjs-ecosystem/feathers-batch/commit/1cdf7a27ffcc39138ec8c918c3153f80d63db40c))
+
 # Changelog
 
 ## [v1.0.1](https://github.com/feathersjs-ecosystem/feathers-batch/tree/v1.0.1) (2020-10-07)
