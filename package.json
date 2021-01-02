@@ -26,11 +26,6 @@
   "main": "lib/",
   "types": "types/",
   "scripts": {
-    "publish": "git push origin --tags && npm run changelog && git push origin",
-    "changelog": "github_changelog_generator -u feathersjs-ecosystem -p feathers-batch && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
-    "release:patch": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish",
     "lint": "semistandard --fix",
     "mocha": "mocha --exit --recursive test/",
     "coverage": "nyc npm run mocha",
@@ -56,6 +51,18 @@
     "*.d.ts",
     "*.js"
   ],
+  "release": {
+    "branches": [
+      "release"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git"
+    ]
+  },
   "dependencies": {
     "@feathersjs/errors": "^4.5.11"
   },
@@ -64,6 +71,8 @@
     "@feathersjs/feathers": "^4.5.11",
     "@feathersjs/rest-client": "^4.5.11",
     "@feathersjs/socketio": "^4.5.11",
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
     "@types/node": "^14.14.11",
     "axios": "^0.21.0",
     "dtslint": "^4.0.6",
