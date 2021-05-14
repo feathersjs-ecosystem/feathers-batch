@@ -30,7 +30,8 @@
     "mocha": "mocha --exit --recursive test/",
     "coverage": "nyc npm run mocha",
     "test": "npm run lint && npm run dtslint && npm run coverage",
-    "dtslint": "dtslint types"
+    "dtslint": "dtslint types",
+    "update-dependencies": "ncu -u"
   },
   "browser": "./client/index.js",
   "semistandard": {
