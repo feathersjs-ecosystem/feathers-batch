@@ -30,7 +30,8 @@
     "mocha": "mocha --exit --recursive test/",
     "coverage": "nyc npm run mocha",
     "test": "npm run lint && npm run dtslint && npm run coverage",
-    "dtslint": "dtslint types"
+    "dtslint": "dtslint types",
+    "update-dependencies": "ncu -u"
   },
   "browser": "./client/index.js",
   "semistandard": {
@@ -78,6 +79,7 @@
     "dtslint": "^4.0.6",
     "feathers-memory": "^4.1.0",
     "mocha": "^8.2.1",
+    "npm-check-updates": "^11.5.11",
     "nyc": "^15.1.0",
     "semistandard": "^16.0.0",
     "typescript": "^4.1.2"
