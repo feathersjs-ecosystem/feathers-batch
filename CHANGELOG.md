@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v1.1.0...v1.1.1) (2021-07-13)
+
+
+### Bug Fixes
+
+* **dependencies:** Update all dependencies ([#105](https://github.com/feathersjs-ecosystem/feathers-batch/issues/105)) ([fe4caf6](https://github.com/feathersjs-ecosystem/feathers-batch/commit/fe4caf60e37eebdb998631ce0b0a54fab3df4996))
+
 # Changelog
 
 # [1.1.0](https://github.com/feathersjs-ecosystem/feathers-batch/compare/v1.0.1...v1.1.0) (2021-01-02)
