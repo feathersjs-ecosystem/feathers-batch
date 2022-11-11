@@ -2,9 +2,8 @@ const feathers = require('@feathersjs/feathers');
 const express = require('@feathersjs/express');
 const socketio = require('@feathersjs/socketio');
 const { NotAcceptable } = require('@feathersjs/errors');
-const memory = require('feathers-memory');
 
-const { BatchService } = require('../lib');
+const { BatchService } = require('../server');
 
 const app = express(feathers());
 

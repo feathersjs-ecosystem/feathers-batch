@@ -1,4 +1,4 @@
-const { NotFound, BadRequest } = require('@feathersjs/errors');
+const { NotFound, BadRequest, convert } = require('@feathersjs/errors');
 
 const paramsPositions = {
   find: 0,
@@ -51,36 +51,29 @@ exports.BatchService = class BatchService {
       })
     );
 
-    if (__convertJSON) {
-      return settledPromises.map((current) => {
-        if (current.status === 'rejected') {
-          const convertedError =
-            typeof current.reason.toJSON === 'function'
-              ? current.reason.toJSON()
-              : { message: current.reason.message };
+    return settledPromises.map((current) => {
+      if (current.status === 'rejected') {
+        const convertedError =
+          typeof current.reason.toJSON === 'function'
+            ? current.reason.toJSON()
+            : { message: current.reason.message };
 
-          return {
-            ...current,
-            reason: convertedError
-          };
-        }
+        return {
+          ...current,
+          reason: convertedError
+        };
+      }
 
-        return current;
-      });
-    }
-
-    return settledPromises;
+      return current;
+    });
   }
 
   async all (calls) {
-    const settledPromises = await this.create(
-      { calls },
-      { __convertJSON: false }
-    );
+    const settledPromises = await this.create({ calls });
     const results = [];
     settledPromises.forEach((current) => {
       if (current.status === 'rejected') {
-        throw current.reason;
+        throw convert(current.reason);
       }
       results.push(current.value);
     });
@@ -88,7 +81,7 @@ exports.BatchService = class BatchService {
   }
 
   async allSettled (calls) {
-    return this.create({ calls }, { __convertJSON: false });
+    return this.create({ calls });
   }
 
   setup () {
