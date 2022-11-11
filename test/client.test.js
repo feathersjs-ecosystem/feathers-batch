@@ -109,6 +109,22 @@ const tests = (app, client) => {
         { status: 'fulfilled', value: { id: '2' } }
       ]);
     },
+    'dedupes batch arguments': async () => {
+      const batchPromise = batchResultPromise();
+      const results = await Promise.all([
+        client.service('dummy').get('1'),
+        client.service('dummy').get('1')
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        { id: '1' }
+      ]);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '1' } }
+      ]);
+    }
   };
 };
 
@@ -147,7 +163,7 @@ describe('feathers-batch client', async () => {
         service('dummy').patch('1', {}),
         service('dummy').update('1', {}),
         service('dummy').remove('1')
-      ]
+      ];
     });
 
     assert.deepStrictEqual(results, [
@@ -179,7 +195,7 @@ describe('feathers-batch client', async () => {
         service('dummy').patch('1', {}),
         service('dummy').update('1', {}),
         service('dummy').remove('1')
-      ]
+      ];
     });
 
     assert.deepStrictEqual(results, [

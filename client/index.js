@@ -1,5 +1,31 @@
 const { convert } = require('@feathersjs/errors');
 
+const isObject = (obj) => {
+  return obj && typeof obj === 'object' && !Array.isArray(obj);
+};
+
+stableStringify = (object) => {
+  return JSON.stringify(object, (key, value) => {
+    if (typeof value === 'function') {
+      throw new GeneralError(
+        'Cannot stringify non JSON value. The object passed to stableStringify must be serializable.'
+      );
+    }
+
+    if (isObject(value)) {
+      const keys = Object.keys(value).sort();
+      const result = {};
+      for (let index = 0, length = keys.length; index < length; ++index) {
+        const key = keys[index];
+        result[key] = value[key];
+      }
+      return result;
+    }
+
+    return value;
+  });
+};
+
 class BatchManager {
   constructor (app, options) {
     this.app = app;
@@ -32,13 +58,33 @@ class BatchManager {
     this.batches = [];
     this.timeout = null;
 
-    const { batchService } = this.options;
+    const { batchService, batchDedupe } = this.options;
+
+    const calls = [];
+    const resultIndexes = [];
+    const keyMap = new Map();
+    currentBatches.forEach((batch, index) => {
+      if (batchDedupe === false) {
+        resultIndexes.push(index);
+        calls.push(batch.payload);
+        return;
+      }
+      const key = stableStringify(batch.payload);
+      if (!keyMap.has(key)) {
+        keyMap.set(key, index);
+        resultIndexes.push(index);
+        calls.push(batch.payload);
+      } else {
+        resultIndexes.push(keyMap.get(key));
+      }
+    });
+
     const results = await this.app.service(batchService).create({
-      calls: currentBatches.map(({ payload }) => payload)
+      calls
     });
 
     currentBatches.forEach((batch, index) => {
-      const callResult = results[index];
+      const callResult = results[resultIndexes[index]];
 
       if (callResult.status === 'fulfilled') {
         batch.resolve(callResult.value);
@@ -47,6 +93,26 @@ class BatchManager {
       }
     });
   }
+
+  // async all(callback) {
+  //   const calls = callback(payloadService);
+  //   const service = this.app.service(batchService);
+  //   const settledPromises = await service.create({ calls });
+  //   const results = [];
+  //   settledPromises.forEach((current) => {
+  //     if (current.status === 'rejected') {
+  //       throw convert(current.reason);
+  //     }
+  //     results.push(current.value);
+  //   });
+  //   return results;
+  // }
+
+  // async allSettled(callback) {
+  //   const calls = callback(payloadService);
+  //   const service = this.app.service(batchService);
+  //   return service.create({ calls });
+  // }
 }
 
 const makeArguments = (context) => {
@@ -69,61 +135,61 @@ const makeArguments = (context) => {
 const makePayload = (context) => {
   const args = makeArguments(context);
   return [context.method, context.path, ...args];
-}
+};
 
 const payloadService = (path) => {
   return {
-    get(id, params) {
+    get (id, params) {
       return makePayload({
         id,
         params,
         path,
-        method: 'get',
+        method: 'get'
       });
     },
-    find(params) {
+    find (params) {
       return makePayload({
         params,
         path,
-        method: 'find',
+        method: 'find'
       });
     },
-    create(data, params) {
+    create (data, params) {
       return makePayload({
         data,
         params,
         path,
-        method: 'create',
+        method: 'create'
       });
     },
-    update(id, data, params) {
-      return makePayload({
-        id,
-        data,
-        params,
-        path,
-        method: 'update',
-      });
-    },
-    patch(id, data, params) {
+    update (id, data, params) {
       return makePayload({
         id,
         data,
         params,
         path,
-        method: 'patch',
+        method: 'update'
       });
     },
-    remove(id, params) {
+    patch (id, data, params) {
+      return makePayload({
+        id,
+        data,
+        params,
+        path,
+        method: 'patch'
+      });
+    },
+    remove (id, params) {
       return makePayload({
         id,
         params,
         path,
-        method: 'remove',
+        method: 'remove'
       });
     }
-  }
-}
+  };
+};
 
 const batchHook = (options) => {
   if (typeof options.batchService !== 'string') {
@@ -280,12 +346,12 @@ const batchMethods = (options) => (app) => {
       results.push(current.value);
     });
     return results;
-  }
+  };
 
-  service.allSettled = async function(callback) {
+  service.allSettled = async function (callback) {
     const calls = callback(payloadService);
     return service.create({ calls });
-  }
+  };
 };
 
 exports.BatchManager = BatchManager;
