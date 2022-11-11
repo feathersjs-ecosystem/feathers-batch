@@ -22,46 +22,44 @@ describe('feathers-batch', () => {
     ]);
   });
 
-  it('works with no batch calls', async () => {
-    const results = await app.service('batch').create({
-      dummy: true
+  it('fails with no batch calls', async () => {
+    assert.rejects(async () => await app.service('batch').create({}), {
+      message: 'Batch Service must be called with data.calls'
     });
-
-    assert.deepStrictEqual(results, []);
   });
 
   it('works with promises', async () => {
     const results = await app.service('batch').create({
       calls: [
-        app.service('people').find(),
-        app.service('people').find()
+        app.service('dummy').find(),
+        app.service('dummy').find()
       ]
     });
 
     assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: [] },
-      { status: 'fulfilled', value: [] }
+      { status: 'fulfilled', value: { method: 'find' } },
+      { status: 'fulfilled', value: { method: 'find' } }
     ]);
   });
 
   it('works with service.all', async () => {
     const results = await app.service('batch').all([
-      app.service('people').find(),
-      app.service('people').find()
+      app.service('dummy').find(),
+      app.service('dummy').find()
     ]);
 
-    assert.deepStrictEqual(results, [[], []]);
+    assert.deepStrictEqual(results, [{ method: 'find' }, { method: 'find' }]);
   });
 
   it('works with service.allSettled', async () => {
     const results = await app.service('batch').allSettled([
-      app.service('people').find(),
-      app.service('people').find()
+      app.service('dummy').find(),
+      app.service('dummy').find()
     ]);
 
     assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: [] },
-      { status: 'fulfilled', value: [] }
+      { status: 'fulfilled', value: { method: 'find' } },
+      { status: 'fulfilled', value: { method: 'find' } }
     ]);
   });
 

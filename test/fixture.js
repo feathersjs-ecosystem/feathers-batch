@@ -22,9 +22,23 @@ app.use('/dummy', {
     }
 
     return { id };
+  },
+  async find (params) {
+    return { method: 'find' };
+  },
+  async create (data, params) {
+    return { method: 'create' };
+  },
+  async update (id, data, params) {
+    return { method: 'update' };
+  },
+  async patch (id, data, params) {
+    return { method: 'patch' };
+  },
+  async remove (id, params) {
+    return { method: 'remove' };
   }
 });
-app.use('/people', memory());
 
 app.use('/batch', new BatchService(app));
 
