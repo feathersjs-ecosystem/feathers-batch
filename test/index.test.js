@@ -44,6 +44,27 @@ describe('feathers-batch', () => {
     ]);
   });
 
+  it('works with service.all', async () => {
+    const results = await app.service('batch').all([
+      app.service('people').find(),
+      app.service('people').find(),
+    ]);
+
+    assert.deepStrictEqual(results, [[], []]);
+  });
+
+  it('works with service.allSettled', async () => {
+    const results = await app.service('batch').allSettled([
+      app.service('people').find(),
+      app.service('people').find(),
+    ]);
+
+    assert.deepStrictEqual(results, [
+      { status: 'fulfilled', value: [] },
+      { status: 'fulfilled', value: [] }
+    ]);
+  });
+
   it('makes batch calls with errors', async () => {
     const results = await app.service('batch').create({
       calls: [
