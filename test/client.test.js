@@ -1,11 +1,16 @@
 const assert = require('assert');
-
 const axios = require('axios');
 const feathers = require('@feathersjs/feathers');
 const restClient = require('@feathersjs/rest-client');
+const memory = require('feathers-memory');
 
 const { app } = require('./fixture');
-const { batchClient, batchHook, batchMethods } = require('../client');
+const {
+  batchClient,
+  batchHook,
+  batchMethods,
+  BatchManager
+} = require('../client');
 
 const batchResultPromise = () => new Promise(resolve => {
   app.service('batch').hooks({
@@ -123,6 +128,81 @@ const tests = (app, client) => {
 
       assert.deepStrictEqual(await batchPromise, [
         { status: 'fulfilled', value: { id: '1' } }
+      ]);
+    },
+    'works with array exclude': async () => {
+      const batchPromise = batchResultPromise();
+      const client = feathers();
+      client.configure(restClient('http://localhost:7865').axios(axios));
+      client.use('/local', memory());
+      client.configure(batchClient({
+        batchService: 'batch',
+        exclude: ['local']
+      }));
+
+      const results = await Promise.all([
+        client.service('dummy').get('1'),
+        client.service('local').find()
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        []
+      ]);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '1' } }
+      ]);
+    },
+    'works with function exclude': async () => {
+      const batchPromise = batchResultPromise();
+      const client = feathers();
+      client.configure(restClient('http://localhost:7865').axios(axios));
+      client.use('/local', memory());
+      client.configure(batchClient({
+        batchService: 'batch',
+        exclude: (context) => context.path === 'local'
+      }));
+
+      const results = await Promise.all([
+        client.service('dummy').get('1'),
+        client.service('local').find()
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        []
+      ]);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '1' } }
+      ]);
+    },
+    'works with params.batchManager': async () => {
+      const batchPromise = batchResultPromise();
+      const batchManager = new BatchManager(client, { batchService: 'batch' });
+      let called = false;
+      const oldFlush = batchManager.flush;
+      batchManager.flush = function flush() {
+        called = true;
+        oldFlush.call(this);
+      }
+
+      const results = await Promise.all([
+        client.service('dummy').get('1', { batchManager }),
+        client.service('dummy').get('2', { batchManager })
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        { id: '2' }
+      ]);
+
+      assert.deepStrictEqual(called, true);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '1' } },
+        { status: 'fulfilled', value: { id: '2' } },
       ]);
     }
   };
