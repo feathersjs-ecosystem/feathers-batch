@@ -7,20 +7,21 @@ const restClient = require('@feathersjs/rest-client');
 const { app } = require('./fixture');
 const { batchClient, batchHook, batchMethods } = require('../client');
 
+const batchResultPromise = () => new Promise(resolve => {
+  app.service('batch').hooks({
+    after: {
+      create: context => {
+        resolve(context.result);
+        return context;
+      }
+    }
+  });
+});
+
 const tests = (app, client) => {
   return {
     'collect batches of multiple calls': async () => {
-      const batchPromise = new Promise(resolve => {
-        app.service('batch').hooks({
-          after: {
-            create: context => {
-              resolve(context.result);
-              return context;
-            }
-          }
-        });
-      });
-
+      const batchPromise = batchResultPromise();
       const results = await Promise.all([
         client.service('dummy').get('test 1'),
         client.service('dummy').get('test 2'),
@@ -55,17 +56,7 @@ const tests = (app, client) => {
       }
     },
     'works with all service methods': async () => {
-      const batchPromise = new Promise(resolve => {
-        app.service('batch').hooks({
-          after: {
-            create: context => {
-              resolve(context.result);
-              return context;
-            }
-          }
-        });
-      });
-
+      const batchPromise = batchResultPromise();
       const results = await Promise.all([
         client.service('dummy').get('1'),
         client.service('dummy').find(),
@@ -101,7 +92,23 @@ const tests = (app, client) => {
 
       assert.deepStrictEqual(results[0].value, { id: 'testing' });
       assert.strictEqual(results[1].reason.message, 'This did not work');
-    }
+    },
+    'skips batching with params.batch': async () => {
+      const batchPromise = batchResultPromise();
+      const results = await Promise.all([
+        client.service('dummy').get('1', { batch: false }),
+        client.service('dummy').get('2')
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        { id: '2' }
+      ]);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '2' } }
+      ]);
+    },
   };
 };
 
@@ -131,17 +138,7 @@ describe('feathers-batch client', async () => {
   });
 
   it('works with service.all', async () => {
-    const batchPromise = new Promise(resolve => {
-      app.service('batch').hooks({
-        after: {
-          create: context => {
-            resolve(context.result);
-            return context;
-          }
-        }
-      });
-    });
-
+    const batchPromise = batchResultPromise();
     const results = await client.service('batch').all((service) => {
       return [
         service('dummy').get('1'),
@@ -173,17 +170,7 @@ describe('feathers-batch client', async () => {
   });
 
   it('works with service.allSettled', async () => {
-    const batchPromise = new Promise(resolve => {
-      app.service('batch').hooks({
-        after: {
-          create: context => {
-            resolve(context.result);
-            return context;
-          }
-        }
-      });
-    });
-
+    const batchPromise = batchResultPromise();
     const results = await client.service('batch').allSettled((service) => {
       return [
         service('dummy').get('1'),

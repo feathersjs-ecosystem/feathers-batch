@@ -130,16 +130,18 @@ const batchHook = (options) => {
     throw new Error('`batchService` name option must be passed to hook');
   }
 
-  let manager = null;
+  let defaultManager = null;
   const excludes = (options.exclude || []).concat(options.batchService);
 
   return async (context) => {
-    if (!manager) {
-      manager = new BatchManager(context.app, options);
+    if (!defaultManager) {
+      defaultManager = new BatchManager(context.app, options);
     }
 
+    const manager = context.params.batchManager || defaultManager;
+
     // TODO: Should this use service.name?
-    if (excludes.includes(context.path)) {
+    if (context.params.batch === false || excludes.includes(context.path)) {
       return context;
     }
 
@@ -154,7 +156,7 @@ const batchClient = (options) => (app) => {
     throw new Error('`batchService` name option must be passed to batchClient');
   }
 
-  const manager = new BatchManager(app, options);
+  const defaultManager = new BatchManager(app, options);
   const excludes = (options.exclude || []).concat(options.batchService);
 
   const filterContext = ({ batch, ...batchParams }, service) => {
@@ -173,6 +175,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return find.call(this, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         path,
         params: batchParams,
@@ -186,6 +189,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return get.call(this, id, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         path,
@@ -200,6 +204,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return create.call(this, data, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         data,
         path,
@@ -214,6 +219,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return update.call(this, id, data, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         data,
@@ -229,6 +235,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return patch.call(this, id, data, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         data,
@@ -244,6 +251,7 @@ const batchClient = (options) => (app) => {
       if (skip) {
         return remove.call(this, id, params);
       }
+      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         path,

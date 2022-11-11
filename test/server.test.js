@@ -42,6 +42,20 @@ describe('feathers-batch', () => {
     ]);
   });
 
+  it('works with mixed arguments', async () => {
+    const results = await app.service('batch').create({
+      calls: [
+        app.service('dummy').find(),
+        ['find', 'dummy', {}]
+      ]
+    });
+
+    assert.deepStrictEqual(results, [
+      { status: 'fulfilled', value: { method: 'find' } },
+      { status: 'fulfilled', value: { method: 'find' } }
+    ]);
+  });
+
   it('works with service.all', async () => {
     const results = await app.service('batch').all([
       app.service('dummy').find(),
