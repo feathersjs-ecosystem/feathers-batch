@@ -9,8 +9,7 @@ class BatchManager {
   }
 
   batch (context) {
-    const args = makeArguments(context);
-    const payload = [context.method, context.path, ...args];
+    const payload = makePayload(context);
 
     const batchPromise = new Promise((resolve, reject) => {
       this.batches.push({
@@ -51,7 +50,7 @@ class BatchManager {
 }
 
 const makeArguments = (context) => {
-  const { query = {} } = context.params;
+  const { query = {} } = context.params = {};
 
   switch (context.method) {
     case 'get':
@@ -66,6 +65,65 @@ const makeArguments = (context) => {
       return [query];
   }
 };
+
+const makePayload = (context) => {
+  const args = makeArguments(context);
+  return [context.method, context.path, ...args];
+}
+
+const payloadService = (path) => {
+  return {
+    get(id, params) {
+      return makePayload({
+        id,
+        params,
+        path,
+        method: 'get',
+      });
+    },
+    find(params) {
+      return makePayload({
+        params,
+        path,
+        method: 'find',
+      });
+    },
+    create(data, params) {
+      return makePayload({
+        data,
+        params,
+        path,
+        method: 'create',
+      });
+    },
+    update(id, data, params) {
+      return makePayload({
+        id,
+        data,
+        params,
+        path,
+        method: 'update',
+      });
+    },
+    patch(id, data, params) {
+      return makePayload({
+        id,
+        data,
+        params,
+        path,
+        method: 'patch',
+      });
+    },
+    remove(id, params) {
+      return makePayload({
+        id,
+        params,
+        path,
+        method: 'remove',
+      });
+    }
+  }
+}
 
 const batchHook = (options) => {
   if (typeof options.batchService !== 'string') {
@@ -196,7 +254,33 @@ const batchClient = (options) => (app) => {
   });
 };
 
+const batchMethods = (options) => (app) => {
+  if (typeof options.batchService !== 'string') {
+    throw new Error('`batchService` name option must be passed to batchMethods');
+  }
+
+  const service = app.service(options.batchService);
+
+  service.all = async function (callback) {
+    const calls = callback(payloadService);
+    const settledPromises = await service.create({ calls });
+    const results = [];
+    settledPromises.forEach((current) => {
+      if (current.status === 'rejected') {
+        throw convert(current.reason);
+      }
+      results.push(current.value);
+    });
+    return results;
+  }
+
+  service.allSettled = async function(callback) {
+    const calls = callback(payloadService);
+    return service.create({ calls });
+  }
+};
+
 exports.BatchManager = BatchManager;
-exports.makeArguments = makeArguments;
 exports.batchClient = batchClient;
+exports.batchMethods = batchMethods;
 exports.batchHook = batchHook;
