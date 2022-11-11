@@ -81,7 +81,16 @@ exports.BatchService = class BatchService {
   }
 
   async allSettled (calls) {
-    return this.create({ calls });
+    const settledPromises = await this.create({ calls });
+    return settledPromises.map((current) => {
+      if (current.status === 'rejected') {
+        return {
+          ...current,
+          reason: convert(current.reason)
+        };
+      }
+      return current;
+    });
   }
 
   setup () {

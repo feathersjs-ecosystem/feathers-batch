@@ -51,6 +51,18 @@ describe('feathers-batch', () => {
     assert.deepStrictEqual(results, [{ method: 'find' }, { method: 'find' }]);
   });
 
+  it('works with service.all error', async () => {
+    const shouldReject = app.service('batch').all([
+      app.service('dummy').find(),
+      app.service('dummy').get('error')
+    ]);
+
+    assert.rejects(
+      async () => await shouldReject,
+      new Error('This did not work')
+    );
+  });
+
   it('works with service.allSettled', async () => {
     const results = await app.service('batch').allSettled([
       app.service('dummy').find(),
@@ -60,6 +72,18 @@ describe('feathers-batch', () => {
     assert.deepStrictEqual(results, [
       { status: 'fulfilled', value: { method: 'find' } },
       { status: 'fulfilled', value: { method: 'find' } }
+    ]);
+  });
+
+  it('works with service.allSettled error', async () => {
+    const results = await app.service('batch').allSettled([
+      app.service('dummy').find(),
+      app.service('dummy').get('error')
+    ]);
+
+    assert.deepStrictEqual(results, [
+      { status: 'fulfilled', value: { method: 'find' } },
+      { status: 'rejected', reason: new Error('This did not work') }
     ]);
   });
 
