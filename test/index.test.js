@@ -30,6 +30,20 @@ describe('feathers-batch', () => {
     assert.deepStrictEqual(results, []);
   });
 
+  it('works with promises', async () => {
+    const results = await app.service('batch').create({
+      calls: [
+        app.service('people').find(),
+        app.service('people').find(),
+      ]
+    });
+
+    assert.deepStrictEqual(results, [
+      { status: 'fulfilled', value: [] },
+      { status: 'fulfilled', value: [] }
+    ]);
+  });
+
   it('makes batch calls with errors', async () => {
     const results = await app.service('batch').create({
       calls: [
