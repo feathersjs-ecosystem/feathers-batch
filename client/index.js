@@ -188,6 +188,25 @@ class BatchManager {
     });
   }
 
+  isExcluded(context) {
+    const { batchService, exclude } = this.options;
+    const path = context.path || context.service.name;
+    const isBatchService = path === batchService;
+    if (isBatchService) {
+      return true;
+    }
+    if (context.params && context.params.batch === false) {
+      return true
+    }
+    if (!exclude) {
+      return false;
+    }
+    if (Array.isArray(exclude)) {
+      return exclude.includes(path);
+    }
+    return exclude(context);
+  }
+
   // async all(callback) {
   //   const calls = callback(payloadService);
   //   const service = this.app.service(batchService);
@@ -222,7 +241,7 @@ const batchHook = (options) => {
 
     const manager = context.params.batchManager || defaultManager;
 
-    if (isExcluded(context, options)) {
+    if (manager.isExcluded(context)) {
       return context;
     }
 
@@ -242,10 +261,10 @@ const batchClient = (options) => (app) => {
   app.mixins.push(function (service) {
     const find = service.find;
     service.find = function (params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return find.call(this, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         params,
         path: service.name,
@@ -255,10 +274,10 @@ const batchClient = (options) => (app) => {
 
     const get = service.get;
     service.get = async function (id, params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return get.call(this, id, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         params,
@@ -269,10 +288,10 @@ const batchClient = (options) => (app) => {
 
     const create = service.create;
     service.create = function (data, params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return create.call(this, data, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         data,
         params,
@@ -283,10 +302,10 @@ const batchClient = (options) => (app) => {
 
     const update = service.update;
     service.update = function (id, data, params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return update.call(this, id, data, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         data,
@@ -298,10 +317,10 @@ const batchClient = (options) => (app) => {
 
     const patch = service.patch;
     service.patch = function (id, data, params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return patch.call(this, id, data, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         data,
@@ -313,10 +332,10 @@ const batchClient = (options) => (app) => {
 
     const remove = service.remove;
     service.remove = function (id, params = {}) {
-      if (isExcluded({ service, params }, options)) {
+      const manager = params.batchManager || defaultManager;
+      if (manager.isExcluded({ service, params })) {
         return remove.call(this, id, params);
       }
-      const manager = params.batchManager || defaultManager;
       return manager.batch({
         id,
         params,
