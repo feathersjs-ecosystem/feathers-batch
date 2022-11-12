@@ -86,6 +86,9 @@ const isExcluded = (context, options) => {
   if (isBatchService) {
     return true;
   }
+  if (service.options && service.options.batch === false) {
+    return true;
+  }
   if (context.params && context.params.batch === false) {
     return true
   }

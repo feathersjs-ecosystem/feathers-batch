@@ -178,6 +178,29 @@ const tests = (app, client) => {
         { status: 'fulfilled', value: { id: '1' } }
       ]);
     },
+    'works with service option exclude': async () => {
+      const batchPromise = batchResultPromise();
+      const client = feathers();
+      client.configure(restClient('http://localhost:7865').axios(axios));
+      client.use('/local', memory({ batch: false }));
+      client.configure(batchClient({
+        batchService: 'batch',
+      }));
+
+      const results = await Promise.all([
+        client.service('dummy').get('1'),
+        client.service('local').find()
+      ]);
+
+      assert.deepStrictEqual(results, [
+        { id: '1' },
+        []
+      ]);
+
+      assert.deepStrictEqual(await batchPromise, [
+        { status: 'fulfilled', value: { id: '1' } }
+      ]);
+    },
     'works with params.batchManager': async () => {
       const batchPromise = batchResultPromise();
       const batchManager = new BatchManager(client, { batchService: 'batch' });
