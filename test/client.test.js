@@ -23,7 +23,67 @@ const batchResultPromise = () => new Promise(resolve => {
   });
 });
 
-const tests = (app, client) => {
+const testExcludeHook = (title, batchExclude, memoryConfig) => {
+  it(title, async () => {
+    const batchPromise = batchResultPromise();
+    const client = feathers();
+    client.configure(restClient('http://localhost:7865').axios(axios));
+    client.use('/local', memory(memoryConfig));
+    const hook = batchHook({
+      batchService: 'batch',
+      batchExclude: batchExclude
+    });
+    const hooks = {
+      before: {
+        all: [hook]
+      }
+    };
+    client.service('dummy').hooks(hooks);
+
+    const results = await Promise.all([
+      client.service('dummy').get('1'),
+      client.service('local').find()
+    ]);
+
+    assert.deepStrictEqual(results, [
+      { id: '1' },
+      []
+    ]);
+
+    assert.deepStrictEqual(await batchPromise, [
+      { status: 'fulfilled', value: { id: '1' } }
+    ]);
+  });
+};
+
+const testExcludePlugin = (label, batchExclude, memoryConfig) => {
+  it(label, async () => {
+    const batchPromise = batchResultPromise();
+    const client = feathers();
+    client.configure(restClient('http://localhost:7865').axios(axios));
+    client.use('/local', memory(memoryConfig));
+    client.configure(batchClient({
+      batchService: 'batch',
+      batchExclude
+    }));
+
+    const results = await Promise.all([
+      client.service('dummy').get('1'),
+      client.service('local').find()
+    ]);
+
+    assert.deepStrictEqual(results, [
+      { id: '1' },
+      []
+    ]);
+
+    assert.deepStrictEqual(await batchPromise, [
+      { status: 'fulfilled', value: { id: '1' } }
+    ]);
+  });
+};
+
+const commonTests = (app, client) => {
   return {
     'collect batches of multiple calls': async () => {
       const batchPromise = batchResultPromise();
@@ -98,14 +158,18 @@ const tests = (app, client) => {
       assert.deepStrictEqual(results[0].value, { id: 'testing' });
       assert.strictEqual(results[1].reason.message, 'This did not work');
     },
-    'skips batching with params.batch': async () => {
+    'skips batching with params.batchExclude': async () => {
       const batchPromise = batchResultPromise();
       const results = await Promise.all([
-        client.service('dummy').get('1', { batch: false }),
+        client.service('dummy').get('1', { batchExclude: true }),
+        client.service('dummy').get('1', { batchExclude: ['dummy'] }),
+        client.service('dummy').get('1', { batchExclude: () => true }),
         client.service('dummy').get('2')
       ]);
 
       assert.deepStrictEqual(results, [
+        { id: '1' },
+        { id: '1' },
         { id: '1' },
         { id: '2' }
       ]);
@@ -130,86 +194,15 @@ const tests = (app, client) => {
         { status: 'fulfilled', value: { id: '1' } }
       ]);
     },
-    'works with array exclude': async () => {
-      const batchPromise = batchResultPromise();
-      const client = feathers();
-      client.configure(restClient('http://localhost:7865').axios(axios));
-      client.use('/local', memory());
-      client.configure(batchClient({
-        batchService: 'batch',
-        exclude: ['local']
-      }));
-
-      const results = await Promise.all([
-        client.service('dummy').get('1'),
-        client.service('local').find()
-      ]);
-
-      assert.deepStrictEqual(results, [
-        { id: '1' },
-        []
-      ]);
-
-      assert.deepStrictEqual(await batchPromise, [
-        { status: 'fulfilled', value: { id: '1' } }
-      ]);
-    },
-    'works with function exclude': async () => {
-      const batchPromise = batchResultPromise();
-      const client = feathers();
-      client.configure(restClient('http://localhost:7865').axios(axios));
-      client.use('/local', memory());
-      client.configure(batchClient({
-        batchService: 'batch',
-        exclude: (context) => context.path === 'local'
-      }));
-
-      const results = await Promise.all([
-        client.service('dummy').get('1'),
-        client.service('local').find()
-      ]);
-
-      assert.deepStrictEqual(results, [
-        { id: '1' },
-        []
-      ]);
-
-      assert.deepStrictEqual(await batchPromise, [
-        { status: 'fulfilled', value: { id: '1' } }
-      ]);
-    },
-    'works with service option exclude': async () => {
-      const batchPromise = batchResultPromise();
-      const client = feathers();
-      client.configure(restClient('http://localhost:7865').axios(axios));
-      client.use('/local', memory({ batch: false }));
-      client.configure(batchClient({
-        batchService: 'batch',
-      }));
-
-      const results = await Promise.all([
-        client.service('dummy').get('1'),
-        client.service('local').find()
-      ]);
-
-      assert.deepStrictEqual(results, [
-        { id: '1' },
-        []
-      ]);
-
-      assert.deepStrictEqual(await batchPromise, [
-        { status: 'fulfilled', value: { id: '1' } }
-      ]);
-    },
     'works with params.batchManager': async () => {
       const batchPromise = batchResultPromise();
       const batchManager = new BatchManager(client, { batchService: 'batch' });
       let called = false;
       const oldFlush = batchManager.flush;
-      batchManager.flush = function flush() {
+      batchManager.flush = function flush () {
         called = true;
         oldFlush.call(this);
-      }
+      };
 
       const results = await Promise.all([
         client.service('dummy').get('1', { batchManager }),
@@ -225,7 +218,7 @@ const tests = (app, client) => {
 
       assert.deepStrictEqual(await batchPromise, [
         { status: 'fulfilled', value: { id: '1' } },
-        { status: 'fulfilled', value: { id: '2' } },
+        { status: 'fulfilled', value: { id: '2' } }
       ]);
     }
   };
@@ -237,7 +230,7 @@ before(async () => {
   });
 });
 
-describe('feathers-batch client', async () => {
+describe('feathers-batch methods', async () => {
   const client = feathers();
   client.configure(restClient('http://localhost:7865').axios(axios));
   client.configure(batchMethods({
@@ -334,7 +327,21 @@ describe('feathers-batch plugin', async () => {
     });
   });
 
-  Object.entries(tests(app, client)).forEach(([label, callback]) => {
+  const excludeFn = (context) => context.path === 'local';
+  testExcludePlugin(
+    'works with service.options.batchExclude array',
+    null,
+    ['local']
+  );
+  testExcludePlugin(
+    'works with service.option.batchExclude array',
+    null,
+    excludeFn
+  );
+  testExcludePlugin('works with array batchExclude', ['local']);
+  testExcludePlugin('works with array batchExclude', excludeFn);
+
+  Object.entries(commonTests(app, client)).forEach(([label, callback]) => {
     it(label, callback);
   });
 });
@@ -357,7 +364,21 @@ describe('feathers-batch hook', async () => {
     });
   });
 
-  Object.entries(tests(app, client)).forEach(([label, callback]) => {
+  const excludeFn = (context) => context.path === 'local';
+  testExcludeHook(
+    'works with service.options.batchExclude array',
+    null,
+    ['local']
+  );
+  testExcludeHook(
+    'works with service.option.batchExclude array',
+    null,
+    excludeFn
+  );
+  testExcludeHook('works with array batchExclude', ['local']);
+  testExcludeHook('works with array batchExclude', excludeFn);
+
+  Object.entries(commonTests(app, client)).forEach(([label, callback]) => {
     it(label, callback);
   });
 });

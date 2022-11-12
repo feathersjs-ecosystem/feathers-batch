@@ -1,4 +1,4 @@
-const { convert } = require('@feathersjs/errors');
+const { convert, GeneralError } = require('@feathersjs/errors');
 
 const isObject = (obj) => {
   return obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -80,28 +80,7 @@ const payloadService = (path) => {
   };
 };
 
-const isExcluded = (context, options) => {
-  const path = context.path || context.service.name;
-  const isBatchService = path === options.batchService;
-  if (isBatchService) {
-    return true;
-  }
-  if (service.options && service.options.batch === false) {
-    return true;
-  }
-  if (context.params && context.params.batch === false) {
-    return true
-  }
-  if (!options.exclude) {
-    return false;
-  }
-  if (Array.isArray(options.exclude)) {
-    return options.exclude.includes(path);
-  }
-  return options.exclude(context, options);
-}
-
-stableStringify = (object) => {
+const stableStringify = (object) => {
   return JSON.stringify(object, (key, value) => {
     if (typeof value === 'function') {
       throw new GeneralError(
@@ -191,23 +170,25 @@ class BatchManager {
     });
   }
 
-  isExcluded(context) {
-    const { batchService, exclude } = this.options;
+  isExcluded (context) {
     const path = context.path || context.service.name;
-    const isBatchService = path === batchService;
-    if (isBatchService) {
+    const batchExclude = (context.params && context.params.batchExclude) ||
+      (context.service.options && context.service.options.batchExclude) ||
+      this.options.batchExclude;
+
+    if (path === this.options.batchService) {
       return true;
     }
-    if (context.params && context.params.batch === false) {
-      return true
-    }
-    if (!exclude) {
+    if (!batchExclude) {
       return false;
     }
-    if (Array.isArray(exclude)) {
-      return exclude.includes(path);
+    if (Array.isArray(batchExclude)) {
+      return batchExclude.includes(path);
     }
-    return exclude(context);
+    if (typeof batchExclude === 'function') {
+      return batchExclude(context);
+    }
+    return !!batchExclude;
   }
 
   // async all(callback) {
