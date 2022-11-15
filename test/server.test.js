@@ -22,83 +22,12 @@ describe('feathers-batch', () => {
     ]);
   });
 
-  it('fails with no batch calls', async () => {
-    assert.rejects(async () => await app.service('batch').create({}), {
-      message: 'Batch Service must be called with data.calls'
-    });
-  });
-
-  it('works with promises', async () => {
+  it('works with no batch calls', async () => {
     const results = await app.service('batch').create({
-      calls: [
-        app.service('dummy').find(),
-        app.service('dummy').find()
-      ]
+      dummy: true
     });
 
-    assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: { method: 'find' } },
-      { status: 'fulfilled', value: { method: 'find' } }
-    ]);
-  });
-
-  it('works with mixed arguments', async () => {
-    const results = await app.service('batch').create({
-      calls: [
-        app.service('dummy').find(),
-        ['find', 'dummy', {}]
-      ]
-    });
-
-    assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: { method: 'find' } },
-      { status: 'fulfilled', value: { method: 'find' } }
-    ]);
-  });
-
-  it('works with service.all', async () => {
-    const results = await app.service('batch').all([
-      app.service('dummy').find(),
-      app.service('dummy').find()
-    ]);
-
-    assert.deepStrictEqual(results, [{ method: 'find' }, { method: 'find' }]);
-  });
-
-  it('works with service.all error', async () => {
-    const shouldReject = app.service('batch').all([
-      app.service('dummy').find(),
-      app.service('dummy').get('error')
-    ]);
-
-    assert.rejects(
-      async () => await shouldReject,
-      new Error('This did not work')
-    );
-  });
-
-  it('works with service.allSettled', async () => {
-    const results = await app.service('batch').allSettled([
-      app.service('dummy').find(),
-      app.service('dummy').find()
-    ]);
-
-    assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: { method: 'find' } },
-      { status: 'fulfilled', value: { method: 'find' } }
-    ]);
-  });
-
-  it('works with service.allSettled error', async () => {
-    const results = await app.service('batch').allSettled([
-      app.service('dummy').find(),
-      app.service('dummy').get('error')
-    ]);
-
-    assert.deepStrictEqual(results, [
-      { status: 'fulfilled', value: { method: 'find' } },
-      { status: 'rejected', reason: new Error('This did not work') }
-    ]);
+    assert.deepStrictEqual(results, []);
   });
 
   it('makes batch calls with errors', async () => {
