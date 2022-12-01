@@ -72,16 +72,16 @@
     "@feathersjs/feathers": "^4.5.15",
     "@feathersjs/rest-client": "^4.5.15",
     "@feathersjs/socketio": "^4.5.15",
-    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
-    "@types/node": "^18.7.14",
-    "axios": "^0.27.2",
+    "@types/node": "^18.11.10",
+    "axios": "^1.2.0",
     "dtslint": "^4.2.1",
     "feathers-memory": "^4.1.0",
-    "mocha": "^10.0.0",
-    "npm-check-updates": "^16.0.6",
+    "mocha": "^10.1.0",
+    "npm-check-updates": "^16.4.3",
     "nyc": "^15.1.0",
     "semistandard": "^16.0.1",
-    "typescript": "^4.8.2"
+    "typescript": "^4.9.3"
   }
 }
