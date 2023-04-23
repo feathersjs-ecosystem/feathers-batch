@@ -24,7 +24,7 @@
 
 ## About
 
-`feathers-batch` allows to batch multiple service requests into one. This is useful for minimizing client side requests to any Feathers API and can additionally speed up batched requests by only [performing authentication once](#authentication).
+`feathers-batch` allows batching multiple service requests into one. This is useful for minimizing client side requests to any Feathers API and can additionally speed up batched requests by only [performing authentication once](#authentication). It also allows better usage of [dataloaders](https://github.com/feathersjs-ecosystem/dataloader) and any other params you want to share in the batch.
 
 It also comes with a client side module that automatically collects API requests from a [Feathers client]() into a batch.
 
