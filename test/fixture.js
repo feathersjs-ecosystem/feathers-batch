@@ -3,7 +3,7 @@ const express = require('@feathersjs/express');
 const socketio = require('@feathersjs/socketio');
 const { NotAcceptable } = require('@feathersjs/errors');
 
-const { BatchService } = require('../src/server');
+const { BatchService } = require('../server');
 
 const app = express(feathers());
 

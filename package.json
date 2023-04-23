@@ -23,7 +23,7 @@
   "engines": {
     "node": ">= 12"
   },
-  "main": "src/server/",
+  "main": "server/index.js",
   "types": "types/",
   "scripts": {
     "lint": "semistandard --fix",
@@ -33,7 +33,7 @@
     "dtslint": "dtslint types",
     "update-dependencies": "ncu -u"
   },
-  "browser": "./src/client/index.js",
+  "browser": "./client/index.js",
   "semistandard": {
     "env": [
       "mocha"

@@ -86,10 +86,10 @@ The return value will be the information as returned by [Promise.allSettled](htt
 [
   {
     "status": : "fulfilled",
-    "value": { /* user object returned by app.service('users').get(1) */ } 
+    "value": { /* user object returned by app.service('users').get(1) */ }
   }, {
     "status": : "fulfilled",
-    "value": { /* page returned by app.service('messages').find({ query: { userId } }) */ } 
+    "value": { /* page returned by app.service('messages').find({ query: { userId } }) */ }
   }
 ]
 ```
@@ -100,10 +100,10 @@ If an error happened:
 [
   {
     "status": : "fulfilled",
-    "value": { /* user object returned by app.service('users').get(1) */ } 
+    "value": { /* user object returned by app.service('users').get(1) */ }
   }, {
     "status": : "rejected",
-    "reason": { /* error JSON or object with error message */ } 
+    "reason": { /* error JSON or object with error message */ }
   }
 ]
 ```

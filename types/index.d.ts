@@ -31,7 +31,7 @@ export interface BatchClientOptions {
 }
 
 export interface BatchHookOptions {
-  batchService?: string;
+  batchService: string;
   timeout?: number;
   exclude?: string[] | ((context: HookContext) => boolean);
   dedupe?: boolean | ((context: HookContext) => boolean);

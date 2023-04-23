@@ -2,7 +2,7 @@ const { convert, GeneralError } = require('@feathersjs/errors');
 
 const has = (obj, path) => {
   return Object.prototype.hasOwnProperty.call(obj, path);
-}
+};
 
 const getPayload = (context) => {
   const payload = [context.method, context.path];
@@ -31,8 +31,8 @@ const getContext = (app, service, method, args) => {
     app,
     service,
     method,
-    path: service.name,
-  }
+    path: service.name
+  };
 
   switch (method) {
     case 'get':
@@ -54,7 +54,7 @@ const getContext = (app, service, method, args) => {
       context.params = args[0] || {};
       return context;
   }
-}
+};
 
 const isObject = (obj) => {
   return obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -71,7 +71,9 @@ const stableStringify = (object) => {
     if (isObject(value)) {
       const keys = Object.keys(value).sort();
       const result = {};
-      keys.forEach((key) => result[key] = value[key]);
+      keys.forEach((key) => {
+        result[key] = value[key];
+      });
       return result;
     }
 
@@ -212,7 +214,7 @@ const batchHook = (options) => {
     context.params.batch = {
       ...context.params.batch,
       manager
-    }
+    };
 
     return context;
   };
@@ -233,7 +235,7 @@ const batchClient = (options) => (app) => {
       return manager;
     }
     return defaultManager;
-  }
+  };
 
   const methods = ['get', 'find', 'create', 'update', 'patch', 'remove'];
 

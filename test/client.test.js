@@ -9,7 +9,7 @@ const {
   batchClient,
   batchHook,
   BatchManager
-} = require('../src/client');
+} = require('../client');
 
 const batchResultPromise = () => new Promise(resolve => {
   app.service('batch').hooks({
@@ -31,7 +31,7 @@ const makeClient = (batchConfig) => {
     ...batchConfig
   }));
   return client;
-}
+};
 
 before(async () => {
   await new Promise(resolve => {
@@ -217,7 +217,7 @@ describe('feathers-batch plugin', async () => {
     ]);
   });
 
-  it('collects single batch with error',  async () => {
+  it('collects single batch with error', async () => {
     try {
       await client.service('dummy').get('feathers-error');
       assert.fail('Should never get here');
@@ -322,13 +322,13 @@ describe('feathers-batch plugin', async () => {
     assert.deepStrictEqual(results, [
       { id: '1' },
       { id: '1' },
-      { id: '1' },
+      { id: '1' }
     ]);
 
     assert.deepStrictEqual(await batchPromise, [
       { status: 'fulfilled', value: { id: '1' } },
       { status: 'fulfilled', value: { id: '1' } },
-      { status: 'fulfilled', value: { id: '1' } },
+      { status: 'fulfilled', value: { id: '1' } }
     ]);
   });
 
@@ -364,7 +364,7 @@ describe('feathers-batch plugin', async () => {
     const batchPromise = batchResultPromise();
 
     let beforeCalled = false;
-    let afterCalled = false;
+    const afterCalled = false;
 
     const beforeHook = (context) => {
       beforeCalled = true;
@@ -376,7 +376,7 @@ describe('feathers-batch plugin', async () => {
 
     client.service('dummy').hooks({
       before: {
-        all: [beforeHook],
+        all: [beforeHook]
       },
       after: {
         all: [afterHook]
@@ -384,14 +384,14 @@ describe('feathers-batch plugin', async () => {
     });
 
     const results = await Promise.all([
-      client.service('dummy').get('1'),
+      client.service('dummy').get('1')
     ]);
 
     assert.deepStrictEqual(beforeCalled, true);
     assert.deepStrictEqual(afterCalled, true);
 
     assert.deepStrictEqual(results, [
-      { id: '1' },
+      { id: '1' }
     ]);
 
     assert.deepStrictEqual(await batchPromise, [
@@ -402,7 +402,10 @@ describe('feathers-batch plugin', async () => {
   it('configs manager via a batchHook', async () => {
     const hookClient = makeClient();
     const batchPromise = batchResultPromise();
-    const hook = batchHook({ exclude: () => context.id === '2' });
+    const hook = batchHook({
+      batchService: 'batch',
+      exclude: () => context.id === '2'
+    });
 
     hookClient.service('dummy').hooks({
       before: {
@@ -412,12 +415,12 @@ describe('feathers-batch plugin', async () => {
 
     const results = await Promise.all([
       hookClient.service('dummy').get('1'),
-      hookClient.service('dummy').get('2'),
+      hookClient.service('dummy').get('2')
     ]);
 
     assert.deepStrictEqual(results, [
       { id: '1' },
-      { id: '2' },
+      { id: '2' }
     ]);
 
     assert.deepStrictEqual(await batchPromise, [
