@@ -254,6 +254,7 @@ const batchClient = (options) => (app) => {
         if (await manager.exclude(context)) {
           return oldMethod.call(this, ...args);
         }
+        oldMethod.call(this, ...args);
         return manager.batch(context);
       };
     });

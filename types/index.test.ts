@@ -1,6 +1,5 @@
-import feathers from '@feathersjs/feathers';
-import { BatchService } from 'feathers-batch';
-import { batchClient } from 'index';
+import { feathers } from '@feathersjs/feathers';
+import { BatchService, batchClient } from 'feathers-batch';
 
 const app = feathers();
 

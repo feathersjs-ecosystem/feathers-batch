@@ -57,18 +57,13 @@ describe('feathers-batch', () => {
       }, {
         status: 'rejected',
         reason: {
-          name: 'NotFound',
-          message: 'Invalid service foobar',
-          code: 404,
-          className: 'not-found',
-          data: undefined,
-          errors: {}
+          message: "Can not find service 'foobar'"
         }
       }, {
         status: 'rejected',
         reason: {
           name: 'BadRequest',
-          message: 'Invalid method blabla on dummy',
+          message: "Invalid method 'blabla' on 'dummy'",
           code: 400,
           className: 'bad-request',
           data: undefined,

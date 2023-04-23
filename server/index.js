@@ -1,4 +1,4 @@
-const { NotFound, BadRequest } = require('@feathersjs/errors');
+const { BadRequest } = require('@feathersjs/errors');
 
 const paramsPositions = {
   find: 0,
@@ -27,12 +27,8 @@ exports.BatchService = class BatchService {
 
       const service = this.app.service(serviceName);
 
-      if (!service) {
-        throw new NotFound(`Invalid service ${serviceName}`);
-      }
-
       if (paramPosition === undefined || typeof service[method] !== 'function') {
-        throw new BadRequest(`Invalid method ${method} on ${serviceName}`);
+        throw new BadRequest(`Invalid method '${method}' on '${serviceName}'`);
       }
 
       args[paramPosition] = serviceParams;

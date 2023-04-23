@@ -1,8 +1,8 @@
 const assert = require('assert');
 const axios = require('axios');
-const feathers = require('@feathersjs/feathers');
+const { feathers } = require('@feathersjs/feathers');
 const restClient = require('@feathersjs/rest-client');
-const memory = require('feathers-memory');
+const { MemoryService } = require('@feathersjs/memory');
 
 const { app } = require('./fixture');
 const {
@@ -25,7 +25,7 @@ const batchResultPromise = () => new Promise(resolve => {
 const makeClient = (batchConfig) => {
   const client = feathers();
   client.configure(restClient('http://localhost:7865').axios(axios));
-  client.use('/local', memory());
+  client.use('/local', new MemoryService());
   client.configure(batchClient({
     batchService: 'batch',
     ...batchConfig
@@ -34,94 +34,8 @@ const makeClient = (batchConfig) => {
 };
 
 before(async () => {
-  await new Promise(resolve => {
-    app.listen(7865).once('listening', () => resolve());
-  });
+  await app.listen(7865);
 });
-
-// describe('feathers-batch methods', async () => {
-//   const client = feathers();
-//   client.configure(restClient('http://localhost:7865').axios(axios));
-//   client.configure(batchMethods({
-//     batchService: 'batch'
-//   }));
-
-//   it('does a batch call', async () => {
-//     const result = await client.service('batch').create({
-//       calls: [
-//         ['get', 'dummy', 'testing']
-//       ]
-//     });
-
-//     assert.deepStrictEqual(result, [
-//       { status: 'fulfilled', value: { id: 'testing' } }
-//     ]);
-//   });
-
-//   it('works with service.all', async () => {
-//     const batchPromise = batchResultPromise();
-//     const results = await client.service('batch').all((service) => {
-//       return [
-//         service('dummy').get('1'),
-//         service('dummy').find(),
-//         service('dummy').create({}),
-//         service('dummy').patch('1', {}),
-//         service('dummy').update('1', {}),
-//         service('dummy').remove('1')
-//       ];
-//     });
-
-//     assert.deepStrictEqual(results, [
-//       { id: '1' },
-//       { method: 'find' },
-//       { method: 'create' },
-//       { method: 'patch' },
-//       { method: 'update' },
-//       { method: 'remove' }
-//     ]);
-
-//     assert.deepStrictEqual(await batchPromise, [
-//       { status: 'fulfilled', value: { id: '1' } },
-//       { status: 'fulfilled', value: { method: 'find' } },
-//       { status: 'fulfilled', value: { method: 'create' } },
-//       { status: 'fulfilled', value: { method: 'patch' } },
-//       { status: 'fulfilled', value: { method: 'update' } },
-//       { status: 'fulfilled', value: { method: 'remove' } }
-//     ]);
-//   });
-
-//   it('works with service.allSettled', async () => {
-//     const batchPromise = batchResultPromise();
-//     const results = await client.service('batch').allSettled((service) => {
-//       return [
-//         service('dummy').get('1'),
-//         service('dummy').find(),
-//         service('dummy').create({}),
-//         service('dummy').patch('1', {}),
-//         service('dummy').update('1', {}),
-//         service('dummy').remove('1')
-//       ];
-//     });
-
-//     assert.deepStrictEqual(results, [
-//       { status: 'fulfilled', value: { id: '1' } },
-//       { status: 'fulfilled', value: { method: 'find' } },
-//       { status: 'fulfilled', value: { method: 'create' } },
-//       { status: 'fulfilled', value: { method: 'patch' } },
-//       { status: 'fulfilled', value: { method: 'update' } },
-//       { status: 'fulfilled', value: { method: 'remove' } }
-//     ]);
-
-//     assert.deepStrictEqual(await batchPromise, [
-//       { status: 'fulfilled', value: { id: '1' } },
-//       { status: 'fulfilled', value: { method: 'find' } },
-//       { status: 'fulfilled', value: { method: 'create' } },
-//       { status: 'fulfilled', value: { method: 'patch' } },
-//       { status: 'fulfilled', value: { method: 'update' } },
-//       { status: 'fulfilled', value: { method: 'remove' } }
-//     ]);
-//   });
-// });
 
 describe('feathers-batch plugin', async () => {
   const client = makeClient();
@@ -364,22 +278,23 @@ describe('feathers-batch plugin', async () => {
     const batchPromise = batchResultPromise();
 
     let beforeCalled = false;
-    const afterCalled = false;
+    let afterCalled = false;
 
     const beforeHook = (context) => {
+      console.log('BEFORE HOOK CALLED');
       beforeCalled = true;
     };
 
     const afterHook = (context) => {
-      beforeCalled = true;
+      afterCalled = true;
     };
 
     client.service('dummy').hooks({
       before: {
-        all: [beforeHook]
+        get: [beforeHook]
       },
       after: {
-        all: [afterHook]
+        get: [afterHook]
       }
     });
 

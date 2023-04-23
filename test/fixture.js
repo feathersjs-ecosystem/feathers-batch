@@ -1,4 +1,4 @@
-const feathers = require('@feathersjs/feathers');
+const { feathers } = require('@feathersjs/feathers');
 const express = require('@feathersjs/express');
 const socketio = require('@feathersjs/socketio');
 const { NotAcceptable } = require('@feathersjs/errors');
@@ -7,9 +7,10 @@ const { BatchService } = require('../server');
 
 const app = express(feathers());
 
+app.use(express.json());
 app.configure(socketio());
 app.configure(express.rest());
-app.use(express.json());
+
 app.use('/dummy', {
   async get (id) {
     if (id === 'feathers-error') {

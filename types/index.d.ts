@@ -4,7 +4,8 @@ import {
   HookContext,
   Id,
   Query,
-  ServiceMethods
+  ServiceMethods,
+  Params
 } from '@feathersjs/feathers';
 
 export type BatchCall = [ method: 'find', service: string, query?: Query ] |
@@ -18,9 +19,9 @@ export interface BatchData {
   calls: BatchCall[];
 }
 
-export class BatchService implements Partial<ServiceMethods<any>> {
+export class BatchService implements Partial<ServiceMethods> {
   constructor(app: Application);
-  create(data: BatchData): Promise<any>;
+  create(data: BatchData, params?: Params): Promise<any>;
 }
 
 export interface BatchClientOptions {
