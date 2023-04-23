@@ -1,9 +1,5 @@
 const { convert, GeneralError } = require('@feathersjs/errors');
 
-const isObject = (obj) => {
-  return obj && typeof obj === 'object' && !Array.isArray(obj);
-};
-
 const has = (obj, path) => {
   return Object.prototype.hasOwnProperty.call(obj, path);
 }
@@ -34,8 +30,8 @@ const getContext = (app, service, method, args) => {
   const context = {
     app,
     service,
+    method,
     path: service.name,
-    method
   }
 
   switch (method) {
@@ -60,59 +56,9 @@ const getContext = (app, service, method, args) => {
   }
 }
 
-// const payloadService = (path) => {
-//   return {
-//     get (id, params) {
-//       return makePayload({
-//         id,
-//         params,
-//         path,
-//         method: 'get'
-//       });
-//     },
-//     find (params) {
-//       return makePayload({
-//         params,
-//         path,
-//         method: 'find'
-//       });
-//     },
-//     create (data, params) {
-//       return makePayload({
-//         data,
-//         params,
-//         path,
-//         method: 'create'
-//       });
-//     },
-//     update (id, data, params) {
-//       return makePayload({
-//         id,
-//         data,
-//         params,
-//         path,
-//         method: 'update'
-//       });
-//     },
-//     patch (id, data, params) {
-//       return makePayload({
-//         id,
-//         data,
-//         params,
-//         path,
-//         method: 'patch'
-//       });
-//     },
-//     remove (id, params) {
-//       return makePayload({
-//         id,
-//         params,
-//         path,
-//         method: 'remove'
-//       });
-//     }
-//   };
-// };
+const isObject = (obj) => {
+  return obj && typeof obj === 'object' && !Array.isArray(obj);
+};
 
 const stableStringify = (object) => {
   return JSON.stringify(object, (key, value) => {
@@ -125,10 +71,7 @@ const stableStringify = (object) => {
     if (isObject(value)) {
       const keys = Object.keys(value).sort();
       const result = {};
-      for (let index = 0, length = keys.length; index < length; ++index) {
-        const key = keys[index];
-        result[key] = value[key];
-      }
+      keys.forEach((key) => result[key] = value[key]);
       return result;
     }
 
@@ -148,24 +91,16 @@ class BatchManager {
     };
   }
 
-  batch (context) {
+  async batch (context) {
     const payload = getPayload(context);
-    const params = context.params;
-
-    let dedupe = this.options.dedupe;
-    if (params.batch && has(params.batch, 'dedupe')) {
-      dedupe = params.batch.dedupe;
-    }
-    if (typeof dedupe === 'function') {
-      dedupe = dedupe(context);
-    }
+    const dedupe = await this.dedupe(context);
 
     const batchPromise = new Promise((resolve, reject) => {
       this.batches.push({
+        payload,
         dedupe,
         resolve,
-        reject,
-        payload
+        reject
       });
     });
 
@@ -178,15 +113,14 @@ class BatchManager {
 
   async flush () {
     const currentBatches = this.batches;
+    const { batchService } = this.options;
+    const calls = [];
+    const resultIndexes = [];
+    const keyMap = new Map();
 
     this.batches = [];
     this.timeout = null;
 
-    const { batchService } = this.options;
-
-    const calls = [];
-    const resultIndexes = [];
-    const keyMap = new Map();
     currentBatches.forEach((batch, index) => {
       if (!batch.dedupe) {
         resultIndexes.push(index);
@@ -209,7 +143,6 @@ class BatchManager {
 
     currentBatches.forEach((batch, index) => {
       const callResult = results[resultIndexes[index]];
-
       if (callResult.status === 'fulfilled') {
         batch.resolve(callResult.value);
       } else {
@@ -218,15 +151,31 @@ class BatchManager {
     });
   }
 
-  async isExcluded (context) {
+  async dedupe (context) {
+    const params = context.params;
+    let dedupe = this.options.dedupe;
+
+    if (params.batch && has(params.batch, 'dedupe')) {
+      dedupe = params.batch.dedupe;
+    }
+
+    if (typeof dedupe === 'function') {
+      const result = await dedupe(context);
+      return !!result;
+    }
+
+    return !!dedupe;
+  }
+
+  async exclude (context) {
     const path = context.path || context.service.name;
     const params = context.params;
+    let exclude = this.options.exclude;
 
     if (path === this.options.batchService) {
       return true;
     }
 
-    let exclude = this.options.exclude;
     if (params.batch && has(params.batch, 'exclude')) {
       exclude = params.batch.exclude;
     }
@@ -240,31 +189,12 @@ class BatchManager {
     }
 
     if (typeof exclude === 'function') {
-      return exclude(context);
+      const result = await exclude(context);
+      return !!result;
     }
 
     return !!exclude;
   }
-
-  // async all(callback) {
-  //   const calls = callback(payloadService);
-  //   const service = this.app.service(batchService);
-  //   const settledPromises = await service.create({ calls });
-  //   const results = [];
-  //   settledPromises.forEach((current) => {
-  //     if (current.status === 'rejected') {
-  //       throw convert(current.reason);
-  //     }
-  //     results.push(current.value);
-  //   });
-  //   return results;
-  // }
-
-  // async allSettled(callback) {
-  //   const calls = callback(payloadService);
-  //   const service = this.app.service(batchService);
-  //   return service.create({ calls });
-  // }
 }
 
 const batchHook = (options) => {
@@ -276,18 +206,13 @@ const batchHook = (options) => {
     }
 
     if (!manager) {
-      manager = new BatchManager(context.app, {
-        batchService: context.app.get('batch').options.batchService,
-        ...options
-      });
+      manager = new BatchManager(context.app, options);
     }
 
     context.params.batch = {
       ...context.params.batch,
       manager
     }
-
-    console.log('Using: ', manager)
 
     return context;
   };
@@ -300,7 +225,7 @@ const batchClient = (options) => (app) => {
 
   const defaultManager = new BatchManager(app, options);
 
-  app.set('batch', { options, manager: defaultManager });
+  app.set('batchManager', defaultManager);
 
   const getManager = (context) => {
     const manager = context.params.batch && context.params.batch.manager;
@@ -311,6 +236,7 @@ const batchClient = (options) => (app) => {
   }
 
   const methods = ['get', 'find', 'create', 'update', 'patch', 'remove'];
+
   app.mixins.push(function (service) {
     if (service.name === options.batchService) {
       return;
@@ -323,7 +249,7 @@ const batchClient = (options) => (app) => {
       service[method] = async function (...args) {
         const context = getContext(app, service, method, args);
         const manager = getManager(context);
-        if (await manager.isExcluded(context)) {
+        if (await manager.exclude(context)) {
           return oldMethod.call(this, ...args);
         }
         return manager.batch(context);
