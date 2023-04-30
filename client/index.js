@@ -1,4 +1,5 @@
 const { convert, GeneralError } = require('@feathersjs/errors');
+const { defaultServiceMethods } = require('@feathersjs/feathers');
 
 const has = (obj, path) => {
   return Object.prototype.hasOwnProperty.call(obj, path);
@@ -227,8 +228,6 @@ const batchClient = (options) => (app) => {
 
   const defaultManager = new BatchManager(app, options);
 
-  app.set('batchManager', defaultManager);
-
   const getManager = (context) => {
     const manager = context.params.batch && context.params.batch.manager;
     if (manager) {
@@ -237,24 +236,21 @@ const batchClient = (options) => (app) => {
     return defaultManager;
   };
 
-  const methods = ['get', 'find', 'create', 'update', 'patch', 'remove'];
-
   app.mixins.push(function (service) {
     if (service.name === options.batchService) {
       return;
     }
-    methods.forEach((method) => {
-      const oldMethod = service[method];
+    defaultServiceMethods.forEach((method) => {
+      const oldMethod = service[`_${method}`];
       if (!oldMethod) {
         return;
       }
-      service[method] = async function (...args) {
+      service[`_${method}`] = async function (...args) {
         const context = getContext(app, service, method, args);
         const manager = getManager(context);
         if (await manager.exclude(context)) {
           return oldMethod.call(this, ...args);
         }
-        oldMethod.call(this, ...args);
         return manager.batch(context);
       };
     });
