@@ -10,7 +10,7 @@
 <!-- TOC -->
 
 - [About](#about)
-- [Service](#service)
+- [Server](#server)
   - [Usage](#usage)
   - [Batch calls](#batch-calls)
   - [Authentication](#authentication)
@@ -18,28 +18,35 @@
   - [Usage](#usage-1)
   - [Options](#options)
   - [Parallelizing requests](#parallelizing-requests)
+  - [UI Frameworks](#ui-frameworks)
 - [License](#license)
 
 <!-- /TOC -->
 
 ## About
 
-`feathers-batch` allows batching multiple service requests into one. This is useful for minimizing client side requests to any Feathers API and can additionally speed up batched requests by only [performing authentication once](#authentication). It also allows better usage of [dataloaders](https://github.com/feathersjs-ecosystem/dataloader) and any other params you want to share in the batch.
+Feathers-batch is a high-performance library for Feathers applications that intelligently batches multiple service calls into one, reducing network overhead and improving response times. It optimizes authentication and seamlessly integrates with REST and Socket.io, simplifying batching and delivering faster and more efficient data processing without complex coding.
 
-It also comes with a client side module that automatically collects API requests from a [Feathers client]() into a batch.
+- Reduced Network Overhead: Most browsers limit concurrent HTTP requests to 6. By batching multiple service requests into a single batch call, the library significantly reduces the number of API requests made from the client to the server. This leads to a reduction in network overhead and improves the overall efficiency of data transfer.
+
+- Improved Performance: Fewer API requests and reduced network latency result in faster response times. Batching helps optimize the performance of applications, especially when dealing with multiple parallel requests.
+
+- Optimized Authentication: The library allows batching of authenticated requests, performing the authentication step only once for the entire batch. This reduces redundant authentication requests and enhances the processing speed of batched requests while maintaining security measures.
+
+- Simplified Code: The library abstracts the complexity of batching multiple service requests, making it easier for developers to manage and optimize API calls without having to manually handle batching logic.
 
 `feathers-batch` consists of two parts:
 
 - The server side [batch service](#service) to execute batch calls
 - The client side [batch client](#client) to collect parallel requests from a [Feathers client]() into a batch service request
 
-```
+```bash
 npm install feathers-batch --save
 ```
 
-## Service
+## Server
 
-The batch service is a normal Feathers service that executes the batch calls.
+The `BatchService` on the server-side in feathers-batch is a custom service provided by the library. It is designed to handle batched service calls sent by the client. When a client makes a batch request, the `BatchService` processes and executes multiple service calls together in a single operation.
 
 ### Usage
 
@@ -110,7 +117,9 @@ If an error happened:
 
 ### Authentication
 
-If you are batching authenticated requests, it is possible to perform the authentication step only once (instead of on every service call) in a batch by adding the [authenticate hook](https://docs.feathersjs.com/api/authentication/hook.html) to the batch service `create` method:
+feathers-batch allows for optimizing authenticated requests within a batch by performing the authentication step only once. This reduces redundant authentication requests and improves processing efficiency, ensuring both security and performance in batch scenarios.
+
+Add the [authenticate hook](https://docs.feathersjs.com/api/authentication/hook.html) to the batch service `create` method. Authentication will be called on the batch service and its results will be available in all of the batched requests.
 
 ```js
 app.service('batch').hooks({
@@ -121,104 +130,136 @@ app.service('batch').hooks({
 ```
 
 ## Client
+[Feathers Client](https://docs.feathersjs.com/api/client.html)
 
-`feathers-batch` also exports a client side module that can be used with [Feathers on the client](https://docs.feathersjs.com/api/client.html) that automatically collects multiple requests that are made at the same time into a single batch call. This works for any transport mechanism (REST, Socket.io etc.).
+The client-side module of feathers-batch empowers Feathers applications to optimize API requests from the browser by automatically batching multiple parallel requests into a single call. This capability is especially valuable because most browsers restrict the number of concurrent HTTP requests to a single domain to around six connections. By using feathers-batch, you can overcome this limitation and effectively batch requests, leading to reduced network overhead and improved performance.
 
 ### Usage
 
-Batching on the client can be enabled like this:
+In feathers-batch, there are two approaches to utilize the client-side functionality. The first method involves using the `batchClient` function, which enables batching for all services within the Feathers client instance automatically. The second option is to apply the `batchHook` to individual services, allowing more control over which services should be batched and which ones should be processed individually. These two approaches offer flexibility in configuring batching behavior to best suit your application's requirements.
 
+The `batchClient` function is used to configure batching for all services within the Feathers client instance. It takes an options object and ensures any service calls made from the client are automatically captured as batches.
 ```js
-// If your module loader supports the `browser` package.json field
 import { batchClient } from 'feathers-batch';
-// Alternatively
-import { batchClient } from 'feathers-batch/client';
 
 const client = feathers();
-// configure Feathers client here
 
-// `batchClient` should be configured *after*
-// any other application level hooks
+// Use `batchClient` to enable batching for all services
 client.configure(batchClient({
-  batchService: 'batch'
+  batchService: 'batch',
+  // Other options for batching
 }));
 ```
 
-Now you can continue to make normal service calls and whenever possible they will be automatically combined into a batch (see [parallelizing requests](#parallelizing-requests) for more information).
+The `batchHook` is applied on a per-service basis. It allows you to configure batching behavior for individual services independently. You do not have to use `batchClient` to use `batchHook`. If you would like to only enable batching on select services, just use `batchHook`.
+```js
+import { batchHook } from 'feathers-batch';
+
+const usersService = client.service('users');
+const messagesService = client.service('messages');
+
+// Create a hook with custom configuration
+const batch = batchHook({
+  batchService: 'batch',
+   // Other options for batching
+})
+
+usersService.hooks({
+  before: {
+     find: [batch],
+     get: [batch],
+     create: [batch],
+     update: [batch],
+     patch: [batch],
+     remove: [batch]
+  }
+});
+
+// You can share batches across services
+usersService.hooks({
+  before: {
+     find: [batch],
+     get: [batch],
+     create: [batch],
+     update: [batch],
+     patch: [batch],
+     remove: [batch]
+  }
+});
+```
+> __Note:__ The hook returned from `batchHook` should always be the LAST before hook for each method.
+
+With `batchHook`, you can customize batching for specific services without affecting other services, or you can share the same batch across specific services. You can even send batches to a different backend endpoint. The settings provided to `batchHook` will override the global settings of `batchClient`.
+
+Once configured, you can continue to make regular service calls using the Feathers client. The client will automatically collect parallel requests and combine them into a single batch, ensuring efficient use of available connections and optimizing data transfer.
 
 ### Options
 
-The following options are available for the `batchClient`:
+When configuring feathers-batch, you have several options available to fine-tune the behavior of the batching process:
 
-- `batchService` (*required*) - The name of the batch service
-- `exclude` (*optional*) - An array of service names that should be excluded from batching. Or an async function that takes the context as an argument.
-- `dedupe` (*optional*) - A boolean indicating if a request should be deduplicated. Or an async function that takes the context as an argument.
-- `timeout` (*optional*) (default: 25`) - The number of milliseconds to wait when collecting parallel requests.
+- **batchService** (required): The name of the batch service registered on the server-side. This option specifies the endpoint to which the batched requests will be sent.
+
+- **exclude** (optional): An array of service names that should be excluded from batching. Alternatively, you can provide an async function that takes the context as an argument to dynamically decide whether to exclude a particular service call from batching. This option is useful when certain services should not be included in the batch for specific scenarios.
+
+- **dedupe** (optional): A boolean indicating whether requests should be deduplicated in the batch. Alternatively, you can provide an async function that takes the context as an argument to determine whether to deduplicate a particular service call. Deduplication helps avoid redundant requests within the batch.
+
+- **timeout** (optional): The number of milliseconds to wait when collecting parallel requests before creating a batch. The default value is 25. Adjusting the timeout can help balance the trade-off between batch size and responsiveness.
 
 ```js
-// Exclude can be an array of services to ignore. Or, it can be
-// a function that evalutes context
 client.configure(batchClient({
   batchService: 'batch',
-  exclude: ['authentication']
+  exclude: ['authentication'], // Exclude 'authentication' service from batching
+  dedupe: false, // disable deduplication of requests in the batch
+  timeout: 50 // Set the batch collection timeout to 50 milliseconds
 }));
+```
 
+```js
 client.configure(batchClient({
   batchService: 'batch',
-  exclude: async (context) => {
-    if (excludedPaths.includes(context.path)) {
+  exclude: (context) => {
+    // Exclude 'admin' service from batching
+    return context.path === 'admin';
+  },
+  dedupe: async (context) => {
+    // Deduplicate 'users' service find requests within the batch
+    if (context.path === 'users' && context.method === 'find') {
       return true;
     }
-    if (context.method !== 'find') {
-      return true
-    }
     return false;
-  }
+  },
+  timeout: 50 // Set the batch collection timeout to 50 milliseconds
 }));
-
-// You can also explicitly exclude individual service calls
-await app.service('api/users').find({ batch: { exclude: true } })
-await app.service('api/users').find({ batch: { exclude: async (context) => {} } })
-
 ```
 
-Not only does `feathers-batch` collect requests into batches, it also deduplicates them so that unneeded requests in the batch are not fired.
+By using functions for `exclude` and `dedupe`, you gain flexibility in customizing which service calls to include or exclude from the batch, making it easy to handle different scenarios based on your application's needs. You can also use params to control batching on each individual service call.
 
 ```js
-// Exclude can be an array of services to ignore. Or, it can be
-// a function that evalutes context
-client.configure(batchClient({
-  batchService: 'batch',
-  deupe: false // disable deduping
-}));
+// Exclude service calls individually with params
+await app.service('users').find({ batch: { exclude: true } });
+await app.service('admin').get(1, { batch: { exclude: (context) => true } });
 
-client.configure(batchClient({
-  batchService: 'batch',
-  dedupe: async (context) => {
-
-  }
-}));
-
-// You can also explicitly dedupe individual service calls
-await app.service('api/users').find({ batch: { dedupe: false } })
-await app.service('api/users').find({ batch: { dedupe: async (context) => {} } })
-
+// Deduplicate service calls individually with params
+await app.service('messages').get(1, { batch: { dedupe: true } });
+await app.service('notifications').find({ batch: { dedupe: (context) => true } });
 ```
 
-### Parallelizing requests
+By setting these options on each service call, you can control which requests should be excluded from batching, ensuring they are processed individually. Additionally, you can deduplicate certain service calls to avoid redundancy within the batch, tailoring the batching behavior to suit specific requirements and further optimize the performance of your Feathers application.
 
-At the same time means e.g. multiple components making requests to the API in parallel. The following example will __NOT__ be collected into a batch since the calls run sequentially using `await`:
+
+### Parallelizing Requests
+
+In feathers-batch, sequential requests are not automatically combined into a batch. When multiple service calls are made sequentially using await, each request is processed individually, similar to making separate API calls. Feathers-batch doesn't batch these requests together because it only collects parallel requests into a single batch call. Just use services as you normally would.
 
 ```js
+// This works as expected
 const user = await client.service('users').get(userId);
 const messages = await client.service('messages').find({
   query: { userId }
 });
 ```
 
-Popular UI framewroks like React and Vue will also make requests from many components to api at once. These will be captured in and executed in a batch.
-
-If the requests are not dependent on each other and you want to batch them, [Promise.all](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) needs to be used:
+When using `Promise.all` to parallelize requests, feathers-batch will automatically detect and capture these concurrent requests as a batch. This is how `feathers-schema` and others resolvers handle promises, which means batching works in all resolvers and loaders.
 
 ```js
 const [ user, messages ] = await Promise.all([
@@ -227,6 +268,24 @@ const [ user, messages ] = await Promise.all([
     query: { userId }
   })
 ]);
+```
+
+## UI Frameworks
+
+Feathers-batch seamlessly integrates with UI libraries like React and Vue, requiring no additional configuration. When components make service requests simultaneously, Feathers-batch automatically captures these requests and combines them into a single batch. This batching process occurs transparently behind the scenes, optimizing data retrieval without any manual intervention.
+
+```js
+// Given the User component fetches each user, the
+// app will automatically batch all user requests
+<ListGroup>
+  {userIds.map((userId) => {
+    return (
+      <ListItem>
+        <User userId={userId}>
+      </ListItem>
+    )
+  })}
+</ListGroup>
 ```
 
 ## License
