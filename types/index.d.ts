@@ -3,6 +3,7 @@ import {
   Application,
   HookContext,
   Id,
+  NullableId,
   Query,
   ServiceMethods,
   Params
@@ -10,9 +11,9 @@ import {
 
 export type BatchCall = [ method: 'find', service: string, query?: Query ] |
   [ method: 'get', service: string, id: Id, query?: Query ] |
-  [ method: 'remove', service: string, id: Id, query?: Query ] |
-  [ method: 'update', service: string, id: Id, data: any, query?: Query ] |
-  [ method: 'patch', service: string, id: Id, data: any, query?: Query ] |
+  [ method: 'remove', service: string, id: NullableId, query?: Query ] |
+  [ method: 'update', service: string, id: NullableId, data: any, query?: Query ] |
+  [ method: 'patch', service: string, id: NullableId, data: any, query?: Query ] |
   [ method: 'create', service: string, data: any, query?: Query ];
 
 export interface BatchData {

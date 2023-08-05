@@ -136,9 +136,7 @@ The client-side module of feathers-batch empowers Feathers applications to optim
 
 ### Usage
 
-In feathers-batch, there are two approaches to utilize the client-side functionality. The first method involves using the `batchClient` function, which enables batching for all services within the Feathers client instance automatically. The second option is to apply the `batchHook` to individual services, allowing more control over which services should be batched and which ones should be processed individually. These two approaches offer flexibility in configuring batching behavior to best suit your application's requirements.
-
-The `batchClient` function is used to configure batching for all services within the Feathers client instance. It takes an options object and ensures any service calls made from the client are automatically captured as batches.
+To enable batching in feathers-batch, you should first configure `batchClient`. The `batchClient` function extends every REST/Socket service with batching capability, ensuring that all network services inherit batching behavior. The options provided to `batchClient` create a default `BatchManager` used for all REST/Socket services within the Feathers client.
 ```js
 import { batchClient } from 'feathers-batch';
 
@@ -151,7 +149,7 @@ client.configure(batchClient({
 }));
 ```
 
-The `batchHook` is applied on a per-service basis. It allows you to configure batching behavior for individual services independently. You do not have to use `batchClient` to use `batchHook`. If you would like to only enable batching on select services, just use `batchHook`.
+Next, you can use `batchHook` to configure batching on individual services if required. The `batchHook` allows you to fine-tune batching behavior for specific services independently. By applying the `batchHook` selectively, you can customize the batching process according to the unique requirements of each service.
 ```js
 import { batchHook } from 'feathers-batch';
 
@@ -176,7 +174,7 @@ usersService.hooks({
 });
 
 // You can share batches across services
-usersService.hooks({
+messagesService.hooks({
   before: {
      find: [batch],
      get: [batch],
@@ -187,7 +185,6 @@ usersService.hooks({
   }
 });
 ```
-> __Note:__ The hook returned from `batchHook` should always be the LAST before hook for each method.
 
 With `batchHook`, you can customize batching for specific services without affecting other services, or you can share the same batch across specific services. You can even send batches to a different backend endpoint. The settings provided to `batchHook` will override the global settings of `batchClient`.
 

@@ -65,14 +65,14 @@
     ]
   },
   "dependencies": {
-    "@feathersjs/errors": "^4.5.15"
+    "@feathersjs/errors": "^5.0.8"
   },
   "devDependencies": {
-    "@feathersjs/express": "^5.0.4",
-    "@feathersjs/feathers": "^5.0.4",
-    "@feathersjs/memory": "^5.0.4",
-    "@feathersjs/rest-client": "^5.0.4",
-    "@feathersjs/socketio": "^5.0.4",
+    "@feathersjs/express": "^5.0.8",
+    "@feathersjs/feathers": "^5.0.8",
+    "@feathersjs/memory": "^5.0.8",
+    "@feathersjs/rest-client": "^5.0.8",
+    "@feathersjs/socketio": "^5.0.8",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^18.7.14",

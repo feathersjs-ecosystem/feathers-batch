@@ -1,4 +1,5 @@
 const { convert, GeneralError } = require('@feathersjs/errors');
+const { defaultServiceMethods } = require('@feathersjs/feathers');
 
 const has = (obj, path) => {
   return Object.prototype.hasOwnProperty.call(obj, path);
@@ -23,6 +24,36 @@ const getPayload = (context) => {
     default:
       payload.push(query);
       return payload;
+  }
+};
+
+const getContext = (app, service, method, args) => {
+  const context = {
+    app,
+    service,
+    path: service.name,
+    method
+  };
+
+  switch (method) {
+    case 'get':
+    case 'remove':
+      context.id = args[0];
+      context.params = args[1] || {};
+      return context;
+    case 'update':
+    case 'patch':
+      context.id = args[0];
+      context.data = args[1];
+      context.params = args[2] || {};
+      return context;
+    case 'create':
+      context.data = args[0];
+      context.params = args[1] || {};
+      return context;
+    default:
+      context.params = args[0] || {};
+      return context;
   }
 };
 
@@ -169,9 +200,11 @@ class BatchManager {
   }
 }
 
+const errorText = '"batchService" is required in "batchClient" options';
+
 const batchHook = (options) => {
   if (typeof options.batchService !== 'string') {
-    throw new Error('`batchService` name option must be passed to batchHook');
+    throw new Error(errorText);
   }
 
   let defaultManager = null;
@@ -181,17 +214,13 @@ const batchHook = (options) => {
       defaultManager = new BatchManager(context.app, options);
     }
 
-    if (context.result) {
-      return context;
-    }
+    const { batch } = context.params;
+    const manager = (batch && batch.manager) || defaultManager;
 
-    const manager = context.params.batch && context.params.batch.manager || defaultManager;
-
-    if (await manager.exclude(context)) {
-      return context;
-    }
-
-    context.result = await manager.batch(context)
+    context.params.batch = {
+      ...context.params.batch,
+      manager
+    };
 
     return context;
   };
@@ -199,29 +228,44 @@ const batchHook = (options) => {
 
 const batchClient = (options) => (app) => {
   if (typeof options.batchService !== 'string') {
-    throw new Error('`batchService` name option must be passed to batchHook');
+    throw new Error(errorText);
   }
 
-  const defaultBatch = batchHook(options);
+  const defaultManager = new BatchManager(context.app, options);
 
-  app.mixins.push(function (service) {
-    if (service.name === options.batchService) {
+  const getManager = (context) => {
+    const { batch } = context.params;
+    return (batch && batch.manager) || defaultManager;
+  };
+
+  app.mixins.push(function (service, path) {
+    if (path === options.batchService) {
       return;
     }
 
-    service.hooks({
-      before: {
-        find: [defaultBatch],
-        get: [defaultBatch],
-        create: [defaultBatch],
-        update: [defaultBatch],
-        patch: [defaultBatch],
-        remove: [defaultBatch],
+    if (!service.connection) {
+      return;
+    }
+
+    defaultServiceMethods.forEach((methodName) => {
+      const method = service[methodName];
+      const baseMethod = service[`_${methodName}`];
+      if (!method || !baseMethod) {
+        return;
       }
-    })
+      service[methodName] = async function (...args) {
+        const context = getContext(app, service, methodName, args);
+        const manager = getManager(context);
+        if (await manager.exclude(context)) {
+          return baseMethod.call(this, ...args);
+        }
+        return manager.batch(context);
+      };
+    });
   });
 };
 
 exports.BatchManager = BatchManager;
 exports.batchClient = batchClient;
 exports.batchHook = batchHook;
+exports.stableStringify = stableStringify;

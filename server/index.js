@@ -9,7 +9,7 @@ const paramsPositions = {
   patch: 2
 };
 
-exports.BatchService = class BatchService {
+class BatchService {
   constructor (app) {
     this.app = app;
   }
@@ -57,4 +57,14 @@ exports.BatchService = class BatchService {
       this.publish(() => false);
     }
   }
+}
+
+const batchServer = (options) => (app) => {
+  if (typeof options.batchService !== 'string') {
+    throw new Error('"batchService" is required in "batchServer" options');
+  }
+  app.use(options.batchService, new BatchService(app));
 };
+
+exports.BatchService = BatchService;
+exports.batchServer = batchServer;

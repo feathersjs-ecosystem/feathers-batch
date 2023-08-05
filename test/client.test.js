@@ -8,6 +8,7 @@ const { app } = require('./fixture');
 const {
   batchClient,
   batchHook,
+  stableStringify,
   BatchManager
 } = require('../client');
 
@@ -42,7 +43,7 @@ describe('feathers-batch plugin', async () => {
 
   it('errors with wrong options', () => {
     assert.throws(() => feathers().configure(batchClient({})), {
-      message: '`batchService` name option must be passed to batchClient'
+      message: '`batchService` is required in BatchManager config'
     });
   });
 
@@ -281,7 +282,6 @@ describe('feathers-batch plugin', async () => {
     let afterCalled = false;
 
     const beforeHook = (context) => {
-      console.log('BEFORE HOOK CALLED');
       beforeCalled = true;
     };
 
@@ -319,7 +319,7 @@ describe('feathers-batch plugin', async () => {
     const batchPromise = batchResultPromise();
     const hook = batchHook({
       batchService: 'batch',
-      exclude: () => context.id === '2'
+      exclude: (context) => context.id === '2'
     });
 
     hookClient.service('dummy').hooks({
@@ -341,5 +341,34 @@ describe('feathers-batch plugin', async () => {
     assert.deepStrictEqual(await batchPromise, [
       { status: 'fulfilled', value: { id: '1' } }
     ]);
+  });
+
+  it('deterministic dedupes params', async () => {
+    const key1 = stableStringify({
+      query: {
+        items: [1, 2, 3],
+        first: 'first',
+        second: 'second'
+      }
+    });
+
+    const key2 = stableStringify({
+      query: {
+        items: [1, 2, 3],
+        second: 'second',
+        first: 'first'
+      }
+    });
+
+    const key3 = stableStringify({
+      query: {
+        items: [3, 2, 1],
+        first: 'first',
+        second: 'second'
+      }
+    });
+
+    assert.deepStrictEqual(key1, key2);
+    assert.notStrictEqual(key1, key3);
   });
 });
