@@ -151,8 +151,59 @@ Now you can continue to make normal service calls and whenever possible they wil
 The following options are available for the `batchClient`:
 
 - `batchService` (*required*) - The name of the batch service
-- `exclude` (*optional*) - An array of service names that should be excluded from batching
-- `timeout` (*optional*) (default: `50`) - The number of milliseconds to wait when collecting parallel requests.
+- `exclude` (*optional*) - An array of service names that should be excluded from batching. Or an async function that takes the context as an argument.
+- `dedupe` (*optional*) - A boolean indicating if a request should be deduplicated. Or an async function that takes the context as an argument.
+- `timeout` (*optional*) (default: 25`) - The number of milliseconds to wait when collecting parallel requests.
+
+```js
+// Exclude can be an array of services to ignore. Or, it can be
+// a function that evalutes context
+client.configure(batchClient({
+  batchService: 'batch',
+  exclude: ['authentication']
+}));
+
+client.configure(batchClient({
+  batchService: 'batch',
+  exclude: async (context) => {
+    if (excludedPaths.includes(context.path)) {
+      return true;
+    }
+    if (context.method !== 'find') {
+      return true
+    }
+    return false;
+  }
+}));
+
+// You can also explicitly exclude individual service calls
+await app.service('api/users').find({ batch: { exclude: true } })
+await app.service('api/users').find({ batch: { exclude: async (context) => {} } })
+
+```
+
+Not only does `feathers-batch` collect requests into batches, it also deduplicates them so that unneeded requests in the batch are not fired.
+
+```js
+// Exclude can be an array of services to ignore. Or, it can be
+// a function that evalutes context
+client.configure(batchClient({
+  batchService: 'batch',
+  deupe: false // disable deduping
+}));
+
+client.configure(batchClient({
+  batchService: 'batch',
+  dedupe: async (context) => {
+
+  }
+}));
+
+// You can also explicitly dedupe individual service calls
+await app.service('api/users').find({ batch: { dedupe: false } })
+await app.service('api/users').find({ batch: { dedupe: async (context) => {} } })
+
+```
 
 ### Parallelizing requests
 
@@ -164,6 +215,8 @@ const messages = await client.service('messages').find({
   query: { userId }
 });
 ```
+
+Popular UI framewroks like React and Vue will also make requests from many components to api at once. These will be captured in and executed in a batch.
 
 If the requests are not dependent on each other and you want to batch them, [Promise.all](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) needs to be used:
 
