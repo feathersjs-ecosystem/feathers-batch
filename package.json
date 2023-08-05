@@ -23,7 +23,7 @@
   "engines": {
     "node": ">= 12"
   },
-  "main": "lib/",
+  "main": "server/index.js",
   "types": "types/",
   "scripts": {
     "lint": "semistandard --fix",
@@ -40,13 +40,13 @@
     ]
   },
   "directories": {
-    "lib": "lib"
+    "lib": "server"
   },
   "files": [
     "CHANGELOG.md",
     "LICENSE",
     "README.md",
-    "lib/**",
+    "server/**",
     "client/**",
     "types/**",
     "*.d.ts",
@@ -65,19 +65,19 @@
     ]
   },
   "dependencies": {
-    "@feathersjs/errors": "^4.5.15"
+    "@feathersjs/errors": "^5.0.8"
   },
   "devDependencies": {
-    "@feathersjs/express": "^4.5.15",
-    "@feathersjs/feathers": "^4.5.15",
-    "@feathersjs/rest-client": "^4.5.15",
-    "@feathersjs/socketio": "^4.5.15",
+    "@feathersjs/express": "^5.0.8",
+    "@feathersjs/feathers": "^5.0.8",
+    "@feathersjs/memory": "^5.0.8",
+    "@feathersjs/rest-client": "^5.0.8",
+    "@feathersjs/socketio": "^5.0.8",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^18.7.14",
     "axios": "^0.27.2",
     "dtslint": "^4.2.1",
-    "feathers-memory": "^4.1.0",
     "mocha": "^10.0.0",
     "npm-check-updates": "^16.0.6",
     "nyc": "^15.1.0",

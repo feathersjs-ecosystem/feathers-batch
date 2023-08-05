@@ -1,4 +1,4 @@
-const { NotFound, BadRequest } = require('@feathersjs/errors');
+const { BadRequest } = require('@feathersjs/errors');
 
 const paramsPositions = {
   find: 0,
@@ -9,7 +9,7 @@ const paramsPositions = {
   patch: 2
 };
 
-exports.BatchService = class BatchService {
+class BatchService {
   constructor (app) {
     this.app = app;
   }
@@ -27,12 +27,8 @@ exports.BatchService = class BatchService {
 
       const service = this.app.service(serviceName);
 
-      if (!service) {
-        throw new NotFound(`Invalid service ${serviceName}`);
-      }
-
       if (paramPosition === undefined || typeof service[method] !== 'function') {
-        throw new BadRequest(`Invalid method ${method} on ${serviceName}`);
+        throw new BadRequest(`Invalid method '${method}' on '${serviceName}'`);
       }
 
       args[paramPosition] = serviceParams;
@@ -61,4 +57,14 @@ exports.BatchService = class BatchService {
       this.publish(() => false);
     }
   }
+}
+
+const batchServer = (options) => (app) => {
+  if (typeof options.batchService !== 'string') {
+    throw new Error('"batchService" is required in "batchServer" options');
+  }
+  app.use(options.batchService, new BatchService(app));
 };
+
+exports.BatchService = BatchService;
+exports.batchServer = batchServer;
