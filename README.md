@@ -272,7 +272,7 @@ const [ user, messages ] = await Promise.all([
 
 ## UI Frameworks
 
-Feathers-batch seamlessly integrates with UI libraries like React and Vue, requiring no additional configuration. When components make service requests simultaneously, Feathers-batch automatically captures these requests and combines them into a single batch. This batching process occurs transparently behind the scenes, optimizing data retrieval without any manual intervention.
+Feathers-batch seamlessly integrates with UI libraries like React and Vue, requiring no additional configuration. When components using a Feathers client to make service requests simultaneously, Feathers-batch automatically captures these requests and combines them into a single batch. This batching process occurs transparently behind the scenes, optimizing data retrieval without any manual intervention.
 
 ```js
 // Given the User component fetches each user, the
@@ -281,7 +281,7 @@ Feathers-batch seamlessly integrates with UI libraries like React and Vue, requi
   {userIds.map((userId) => {
     return (
       <ListItem>
-        <User userId={userId}>
+        <User userId={userId} />
       </ListItem>
     )
   })}
